@@ -21,8 +21,8 @@ class Roller(Subsystem):
             .smartCurrentLimit(Constants.MotorCurrentLimit)
         self._motor.configure(
             spark_config,
-            rev.SparkBase.ResetMode.kResetSafeParameters,
-            rev.SparkBase.PersistMode.kPersistParameters)
+            rev.ResetMode.kResetSafeParameters,
+            rev.PersistMode.kPersistParameters)
 
     def stopCommand(self) -> Command:
         return self.runOnce(self._motor.stopMotor)

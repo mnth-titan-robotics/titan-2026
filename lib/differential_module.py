@@ -2,7 +2,7 @@ import math
 from typing import Callable, Optional, Tuple
 from wpilib import Timer
 from wpimath import units
-from rev import SparkBase, SparkBaseConfig, SparkLowLevel, SparkMax, SparkFlex
+from rev import SparkBase, SparkBaseConfig, SparkLowLevel, SparkMax, SparkFlex, ResetMode, PersistMode
 from lib.classes import DifferentialModuleConfig, MotorIdleMode, MotorControllerType
 from wpimath.kinematics import MecanumDriveKinematics, MecanumDriveWheelSpeeds
 from wpimath.controller import HolonomicDriveController
@@ -38,8 +38,8 @@ class DifferentialModule:
          )
         self._drivingMotor.configure(
             self._drivingMotorConfig,
-            SparkBase.ResetMode.kResetSafeParameters,
-            SparkBase.PersistMode.kPersistParameters
+            ResetMode.kResetSafeParameters,
+            PersistMode.kPersistParameters
         )
         self._drivingEncoder = self._drivingMotor.getEncoder()
         self._drivingEncoder.setPosition(0)
@@ -62,8 +62,8 @@ class DifferentialModule:
         idleMode = SparkBaseConfig.IdleMode.kCoast if motorIdleMode == MotorIdleMode.Coast else SparkBaseConfig.IdleMode.kBrake
         self._drivingMotor.configure(
             SparkBaseConfig().setIdleMode(idleMode),
-            SparkBase.ResetMode.kNoResetSafeParameters,
-            SparkBase.PersistMode.kNoPersistParameters)
+            ResetMode.kNoResetSafeParameters,
+            PersistMode.kNoPersistParameters)
 
     def reset(self) -> None:
         self._drivingEncoder.setPosition(0)
