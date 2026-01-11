@@ -1,0 +1,51 @@
+﻿{
+  "version": "2.0.0",
+  "windows": {
+    "options": {
+      "shell": {
+        "executable": "powershell",
+        "args": [".venv\\Scripts\\activate.ps1", ";"]
+      }
+    }
+  },
+  "linux": {
+    "options": {
+      "shell": {
+        "executable": "bash",
+        "args": [ "--init-file", ".venv/bin/activate", "-ci" ]
+      }
+    },
+  },
+  "tasks": [
+    {
+      "label": "RobotPy Project: Install Prerequisites",
+      "type": "shell",
+      "command": "python ./.vscode/scripts/install.py",
+      "problemMatcher": []
+    },
+    {
+      "label": "RobotPy Project: Install/Update Libraries",
+      "type": "shell",
+      "command": "python -m robotpy sync --use-certifi",
+      "problemMatcher": []
+    },
+    {
+      "label": "RobotPy Project: Test Robot Code",
+      "type": "shell",
+      "command": "python -m robotpy test --isolated -- -v -s --exitfirst",
+      "problemMatcher": []
+    },
+    {
+      "label": "RobotPy Project: Simulate Robot Code",
+      "type": "shell",
+      "command": "python -m robotpy sim",
+      "problemMatcher": []
+    },
+    {
+      "label": "RobotPy Project: Deploy Robot Code",
+      "type": "shell",
+      "command": "python -m robotpy deploy --skip-tests --ignore-image-version",
+      "problemMatcher": []
+    }
+  ]
+}
