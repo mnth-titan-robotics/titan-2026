@@ -8,7 +8,6 @@ import enum
 import commands2
 import constants
 from subsystems.drive import Drive
-from subsystems.roller import Roller
 from commands.auto import Auto
 from commands.game import Game
 from wpimath.kinematics import ChassisSpeeds
@@ -46,7 +45,6 @@ class RobotContainer:
     def _initSubsystems(self):
         """Initializes subsystems. Should only be called from __init__"""
         self._drive = Drive()
-        self._roller = Roller()
 
     def _initControllers(self):
         self._driverController = commands2.button.CommandXboxController(
@@ -70,9 +68,6 @@ class RobotContainer:
                     -self._driverController.getRightY())
             )
         )
-        self._roller.setDefaultCommand(
-            self._roller.stopCommand()
-        )
 
     def _initControllerBindings(self) -> None:
         """Use this method to define your button->command mappings."""
@@ -94,8 +89,7 @@ class RobotContainer:
         # self.driver.x().whileTrue(cmd.none())
         # self.driver.start().whileTrue(cmd.none())
         # self.driver.back().whileTrue(cmd.none())
-        self._operatorController.rightTrigger().whileTrue(self._roller.ejectCommand())
-        # TODO: Bind the operator's left trigger to reverse
+        # self._operatorController.rightTrigger().whileTrue(cmd.none())
 
     def getAutonomousCommand(self) -> commands2.Command:
         """Use this to pass the autonomous command to the main {Robot} class.

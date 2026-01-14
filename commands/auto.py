@@ -35,10 +35,8 @@ class Auto:
     def auto_center(self) -> Command:
         # Move forward at 25% speed for 3.25s, then stop
         drive = self._robot._drive
-        roller = self._robot._roller
         speeds = ChassisSpeeds(vx=0.25)
         return cmd.sequence(
             drive.driveCommand(speeds).withTimeout(3.25),
-            drive.stopCommand().withTimeout(0.1),
-            roller.ejectCommand().withTimeout(0.5)
+            drive.stopCommand().withTimeout(0.1)
         )

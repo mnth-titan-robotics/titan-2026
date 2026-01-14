@@ -67,9 +67,23 @@ class Subsystems:
         MaxVelocity = 15
         MaxAcceleration = 3
 
-    class Roller:
-        MotorId = 15
-        MotorCurrentLimit = 20
+    class Launcher:
+        MotorId = 18
+        MotorCurrentLimit = 40
+        MotorVComp = 12
+        LaunchSpeed = 0.85
+        IdleSpeed = 0.2
+
+    class Intake:
+        MotorId = 16
+        MotorCurrentLimit = 25
         MotorVComp = 10
-        EjectSpeed = 1.0
-        ReverseSpeed = -1.0
+        IntakeSpeed = 1.0
+        ReverseSpeed = -0.5
+
+    class Climber:
+        MotorId = 20
+        MotorCurrentLimit = 30
+        MotorVComp = 12
+        ClimbSpeed = 1.0
+        LowerSpeed = -0.5
