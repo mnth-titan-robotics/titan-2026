@@ -1,89 +1,97 @@
 from lib.enums import *
 from lib.classes import *
 from wpimath import units
-from wpimath.kinematics import MecanumDriveKinematics
+from wpimath.kinematics import SwerveDrive4Kinematics
+from wpimath.trajectory import TrapezoidProfile
+from wpimath.geometry import Transform3d, Translation3d, Rotation3d, Pose3d, Translation2d
 import math
 
 
 class Controllers:
     DriverPort = 0
     OperatorPort = 1
+    kDriveDeadband: float = 0.1
+
+
+class NeoMotorConstants:
+    kFreeSpeedRpm: float = 5676
 
 
 class Subsystems:
     class Drive:
-        TrackWidth: units.meters = units.inchesToMeters(23)
-        WheelBase: units.meters = units.inchesToMeters(27.5)
+        kMaxSpeedMetersPerSecond: float = 12
+        kMaxAngularSpeed: float = 2.0 * math.pi
 
-        TranslationSpeedMax: units.meters_per_second = 4.8
-        RotationSpeedMax: units.radians_per_second = 2 * math.pi  # type: ignore
+        kTrackWidth: units.meters = units.inchesToMeters(26.5)
+        kWheelBase: units.meters = units.inchesToMeters(26.5)
 
-        ModuleConstants = DifferentialModuleConstants(
-            wheelDiameter=units.inchesToMeters(3.0),
-            drivingMotorControllerType=MotorControllerType.SparkMax,
-            drivingMotorCurrentLimit=50,
-            drivingMotorReduction=8.46
+        kDriveKinematics: SwerveDrive4Kinematics = SwerveDrive4Kinematics(
+            Translation2d(kWheelBase / 2, kTrackWidth / 2),
+            Translation2d(kWheelBase / 2, -kTrackWidth / 2),
+            Translation2d(-kWheelBase / 2, kTrackWidth / 2),
+            Translation2d(-kWheelBase / 2, -kTrackWidth / 2)
         )
 
-        # Each wheel is a "module", with CAN ids
-        ModuleConfigs = (
-            DifferentialModuleConfig(
-                location=ModuleLocation.LeftFront,
-                drivingMotorCANId=10,
-                isInverted=False,
-                constants=ModuleConstants),
-            DifferentialModuleConfig(
-                location=ModuleLocation.LeftRear,
-                drivingMotorCANId=11,
-                isInverted=False,
-                constants=ModuleConstants),
-            DifferentialModuleConfig(
-                location=ModuleLocation.RightFront,
-                drivingMotorCANId=12,
-                isInverted=True,
-                constants=ModuleConstants),
-            DifferentialModuleConfig(
-                location=ModuleLocation.RightRear,
-                drivingMotorCANId=13,
-                isInverted=True,
-                constants=ModuleConstants)
-        )
+         # Angular offsets of the modules relative to the chassis in radians
+        kFrontLeftChassisAngularOffset = -math.pi / 2
+        kFrontRightChassisAngularOffset = 0
+        kRearLeftChassisAngularOffset = math.pi
+        kRearRightChassisAngularOffset = math.pi / 2
 
-        # Kinematics provide a model of how the robot will move based on wheel motion.
-        # DifferentialDriveKinematics - aka: "Tank Drive"
-        # MecanumDriveKinematics - Wheel can only rotate axially, diagonal rollers allow moving side-to-side
-        # SwerveDrive4Kinematics - Wheels can rotate (like shopping cart wheels), move forward and backward.
-        Kinematics = MecanumDriveKinematics(
-            Translation2d(WheelBase / 2.0, TrackWidth / 2.0),
-            Translation2d(WheelBase / 2.0, -TrackWidth / 2.0),
-            Translation2d(-WheelBase / 2.0, TrackWidth / 2.0),
-            Translation2d(-WheelBase / 2.0, -TrackWidth / 2.0)
-        )
+        # SPARK MAX CAN IDs
+        kFrontLeftDrivingCanId: int = 1
+        kRearLeftDrivingCanId: int = 5
+        kFrontRightDrivingCanId: int = 3
+        kRearRightDrivingCanId: int = 7
 
-        # TODO: Tune these PID values
-        TranslationPID = PID(1.0, 0.0, 0.0)
-        RotationPID = PID(1.0, 0.0, 0.0)
+        kFrontLeftTurningCanId: int = 2
+        kRearLeftTurningCanId: int = 6
+        kFrontRightTurningCanId: int = 4
+        kRearRightTurningCanId: int = 8
 
-        MaxVelocity = 15
-        MaxAcceleration = 3
+        kGyroReversed: bool = False
 
-    class Launcher:
-        MotorId = 18
-        MotorCurrentLimit = 40
-        MotorVComp = 12
-        LaunchSpeed = 0.85
-        IdleSpeed = 0.2
 
-    class Intake:
-        MotorId = 16
-        MotorCurrentLimit = 25
-        MotorVComp = 10
-        IntakeSpeed = 1.0
-        ReverseSpeed = -0.5
+class ModuleConstants:
+    # The MAXSwerve module can be configured with one of three pinion gears: 12T,
+    # 13T, or 14T. This changes the drive speed of the module (a pinion gear with
+    # more teeth will result in a robot that drives faster).
+    kDrivingMotorPinionTeeth: int = 14
 
-    class Climber:
-        MotorId = 20
-        MotorCurrentLimit = 30
-        MotorVComp = 12
-        ClimbSpeed = 1.0
-        LowerSpeed = -0.5
+    # Calculations required for driving motor conversion factors and feed forward
+    kDrivingMotorFreeSpeedRps: float = NeoMotorConstants.kFreeSpeedRpm / 60
+    kWheelDiameterMeters: float = 0.0762
+    kWheelCircumferenceMeters: float = kWheelDiameterMeters * math.pi
+    # 45 teeth on the wheel's bevel gear, 22 teeth on the first-stage spur gear, 15
+    # teeth on the bevel pinion
+    kDrivingMotorReduction: float = (45.0 * 22) / (kDrivingMotorPinionTeeth * 15)
+    kDriveWheelFreeSpeedRps: float = (kDrivingMotorFreeSpeedRps * kWheelCircumferenceMeters) / kDrivingMotorReduction
+
+    # Simulation constants
+    # 5-G acceleration
+    kdrivingMotorSimSlew: float = 9.8 * 5
+    # Treat the turning motor as free-spinning
+    kturningMotorSimSpeed: float = 31.0
+    kturningMotorSimD: float = 0.0
+
+
+class AutoConstants:
+    kMaxSpeedMetersPerSecond: float = 3
+    kMaxAccelerationMetersPerSecondSquared: float = 3
+    kMaxAngularSpeedRadiansPerSecond: float = math.pi
+    kMaxAngularSpeedRadiansPerSecondSquared: float = math.pi
+    kPXController: float = 1
+    kPYController: float = 1
+    kPThetaController: float = 1
+
+    # Constraint for the motion profiled robot angle controller
+    kThetaControllerConstraints = TrapezoidProfile.Constraints(
+    kMaxAngularSpeedRadiansPerSecond, kMaxAngularSpeedRadiansPerSecondSquared)
+
+
+class Roller:
+    MotorId = 9
+    MotorCurrentLimit = 20
+    MotorVComp = 10
+    EjectSpeed = 1.0
+    ReverseSpeed = -1.0
