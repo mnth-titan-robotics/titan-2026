@@ -39,17 +39,38 @@ class Subsystems:
         kRearRightChassisAngularOffset = math.pi / 2
 
         # SPARK MAX CAN IDs
-        kFrontLeftDrivingCanId: int = 1
-        kRearLeftDrivingCanId: int = 5
-        kFrontRightDrivingCanId: int = 3
-        kRearRightDrivingCanId: int = 7
+        kFrontLeftDrivingCanId: int = 11
+        kRearLeftDrivingCanId: int = 15
+        kFrontRightDrivingCanId: int = 13
+        kRearRightDrivingCanId: int = 17
 
-        kFrontLeftTurningCanId: int = 2
-        kRearLeftTurningCanId: int = 6
-        kFrontRightTurningCanId: int = 4
-        kRearRightTurningCanId: int = 8
+        kFrontLeftTurningCanId: int = 12
+        kRearLeftTurningCanId: int = 16
+        kFrontRightTurningCanId: int = 14
+        kRearRightTurningCanId: int = 18
 
         kGyroReversed: bool = False
+
+    class Launcher:
+        MotorId = 6
+        MotorCurrentLimit = 40
+        MotorVComp = 12
+        LaunchSpeed = 0.55
+        IdleSpeed = 0.2
+
+    class Intake:
+        MotorId = 2
+        MotorCurrentLimit = 25
+        MotorVComp = 10
+        IntakeSpeed = 1.0
+        ReverseSpeed = -0.5
+
+    class Climber:
+        MotorId = 20
+        MotorCurrentLimit = 30
+        MotorVComp = 12
+        ClimbSpeed = 1.0
+        LowerSpeed = -0.5
 
 
 class ModuleConstants:

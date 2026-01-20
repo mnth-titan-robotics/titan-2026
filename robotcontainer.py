@@ -8,6 +8,8 @@ import enum
 import commands2
 import constants
 from subsystems.drive import Drive
+from subsystems.launcher import Launcher
+from subsystems.intake import Intake
 from commands.auto import Auto
 from commands.game import Game
 from wpimath.kinematics import ChassisSpeeds
@@ -45,6 +47,8 @@ class RobotContainer:
     def _initSubsystems(self):
         """Initializes subsystems. Should only be called from __init__"""
         self._drive = Drive()
+        self._launcher = Launcher()
+        self._intake = Intake()
 
     def _initControllers(self):
         self._driverController = commands2.button.CommandXboxController(
@@ -68,6 +72,12 @@ class RobotContainer:
                     -self._driverController.getRightY())
             )
         )
+        self._launcher.setDefaultCommand(
+            self._launcher.stop()
+        )
+        self._intake.setDefaultCommand(
+            self._intake.stop()
+        )
 
     def _initControllerBindings(self) -> None:
         """Use this method to define your button->command mappings."""
@@ -75,8 +85,8 @@ class RobotContainer:
         # Leaving unused, commented lines helps us keep track of what inputs aren't being used.
         # self.driver.rightStick().whileTrue(cmd.none())
         # self.driver.leftStick().whileTrue(cmd.none())
-        # self.driver.leftTrigger().whileTrue(cmd.none())
-        # self.driver.rightTrigger().whileTrue(cmd.none())
+        self._driverController.leftTrigger().whileTrue(self._intake.intake())
+        self._driverController.rightTrigger().whileTrue(self._launcher.start())
         # self.driver.rightBumper().whileTrue(cmd.none())
         # self.driver.leftBumper().whileTrue(cmd.none())
         # self.driver.povUp().whileTrue(cmd.none())
