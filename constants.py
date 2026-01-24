@@ -55,7 +55,7 @@ class Subsystems:
         MotorId = 6
         MotorCurrentLimit = 40
         MotorVComp = 12
-        LaunchSpeed = 0.55
+        LaunchSpeed = -1.0
         IdleSpeed = 0.2
 
     class Intake:

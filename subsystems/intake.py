@@ -21,16 +21,16 @@ class Intake(Subsystem):
         """Starts the intake at intake speed."""
         def command_function():
             self._motor.set(self.Constants.IntakeSpeed)
-        return self.runOnce(command_function).withName("IntakeStart")
+        return self.run(command_function).withName("IntakeStart")
     
     def reverse(self) -> Command:
         """Reverses the intake."""
         def command_function():
             self._motor.set(self.Constants.ReverseSpeed)
-        return self.runOnce(command_function).withName("IntakeReverse")
+        return self.run(command_function).withName("IntakeReverse")
     
     def stop(self) -> Command:
         """Stops the intake."""
         def command_function():
             self._motor.set(0)
-        return self.runOnce(command_function).withName("IntakeStop")
+        return self.run(command_function).withName("IntakeStop")
