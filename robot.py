@@ -8,6 +8,7 @@
 import wpilib
 import commands2
 import typing
+from lib import utils
 
 from robotcontainer import RobotContainer
 
@@ -20,6 +21,7 @@ class Robot(commands2.TimedCommandRobot):
     def __init__(self):
         """Calls the TimedCommandRobot __init__ method"""
         super().__init__()
+        utils.setRobotInstance(self)
 
     def robotInit(self) -> None:
         """

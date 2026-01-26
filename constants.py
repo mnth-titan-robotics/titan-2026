@@ -3,7 +3,7 @@ from lib.classes import *
 from wpimath import units
 from wpimath.kinematics import SwerveDrive4Kinematics
 from wpimath.trajectory import TrapezoidProfile
-from wpimath.geometry import Transform3d, Translation3d, Rotation3d, Pose3d, Translation2d
+from wpimath.geometry import Translation2d
 import math
 
 

@@ -14,8 +14,8 @@ class Launcher(Subsystem):
             rev.SparkBase.MotorType.kBrushed
         )
         self._motor.setCANTimeout(250)
-        self._motor.setInverted(False)
         spark_config = rev.SparkMaxConfig()
+        spark_config.inverted(True)
         self._motor.configure(spark_config, rev.ResetMode.kResetSafeParameters, rev.PersistMode.kPersistParameters)
 
     def start(self) -> Command:

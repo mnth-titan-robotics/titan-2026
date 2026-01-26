@@ -13,6 +13,9 @@ from subsystems.intake import Intake
 from commands.auto import Auto
 from commands.game import Game
 from wpimath.kinematics import ChassisSpeeds
+from services import Tracker, TrackerConstants, Localization
+from services.questnav import QuestNav
+from lib import utils
 
 # Create an alias to simplify usage
 cmd = commands2.cmd
@@ -39,14 +42,19 @@ class RobotContainer:
         return self.CommandSelector.ONE
 
     def __init__(self) -> None:
+        self._initServices()
         self._initSubsystems()
         self._initControllers()
         self._initCommands()
         self._initControllerBindings()
+        
+    def _initServices(self):
+        self._localization = Localization()
+        self._tracker = Tracker(TrackerConstants(), self._localization.get_pose, self._localization.get_velocity)
 
     def _initSubsystems(self):
         """Initializes subsystems. Should only be called from __init__"""
-        self._drive = Drive()
+        self._drive = Drive(self._tracker)
         self._launcher = Launcher()
         self._intake = Intake()
 
