@@ -73,11 +73,10 @@ class RobotContainer:
 
         # Set default commands for all subsystems
         self._drive.setDefaultCommand(
-            self._drive.driveCommand(
-                lambda: ChassisSpeeds(
-                    -self._driverController.getLeftY(),
-                    -self._driverController.getLeftX(),
-                    -self._driverController.getRightY())
+            self._drive.driveJoystickCommand(
+                lambda: -utils.apply_deadband(self._driverController.getLeftY()),
+                lambda: -utils.apply_deadband(self._driverController.getLeftX()),
+                lambda: -utils.apply_deadband(self._driverController.getRightX())
             )
         )
         self._launcher.setDefaultCommand(

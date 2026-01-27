@@ -8,19 +8,19 @@
 
 import math
 
-from rev import SparkMaxConfig, ClosedLoopConfig, SparkBaseConfig, FeedbackSensor
+from rev import SparkMaxConfig, SparkBaseConfig, FeedbackSensor
 from constants import ModuleConstants
 
 
 class Configs:
   class MAXSwerveModule:
-    kDrivingConfig: SparkMaxConfig = SparkMaxConfig()
-    kTurningConfig: SparkMaxConfig = SparkMaxConfig()
-
     # Use module constants to calculate conversion factors and feed forward gain.
     drivingFactor = ModuleConstants.kWheelDiameterMeters * math.pi / ModuleConstants.kDrivingMotorReduction
     turningFactor = 2 * math.pi
     drivingVelocityFeedForward = 1 / ModuleConstants.kDriveWheelFreeSpeedRps
+
+    # Driving Motor Configuration
+    kDrivingConfig: SparkMaxConfig = SparkMaxConfig()
     (kDrivingConfig
      .setIdleMode(SparkBaseConfig.IdleMode.kBrake)
      .smartCurrentLimit(50)
@@ -32,11 +32,13 @@ class Configs:
     (kDrivingConfig.closedLoop
      .setFeedbackSensor(FeedbackSensor.kPrimaryEncoder)
      # These are example gains - you may need to modify them for your own robot!
-     .pid(0.04, 0, 0)
+     .pid(0.4, 0, 0)
      .velocityFF(drivingVelocityFeedForward)
      .outputRange(-1, 1)
      )
 
+    # Turning Motor Configuration
+    kTurningConfig: SparkMaxConfig = SparkMaxConfig()
     (kTurningConfig
      .setIdleMode(SparkBaseConfig.IdleMode.kBrake)
      .smartCurrentLimit(20)

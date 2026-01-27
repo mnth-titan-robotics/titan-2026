@@ -22,7 +22,11 @@ class Subsystems:
         kMaxSpeedMetersPerSecond: float = 12
         kMaxAngularSpeed: float = 2.0 * math.pi
 
+        # Chassis configuration
+        # Distance between centers of right and left wheels on robot
         kTrackWidth: units.meters = units.inchesToMeters(26.5)
+        
+        # Distance between front and back wheels on robot
         kWheelBase: units.meters = units.inchesToMeters(26.5)
 
         kDriveKinematics: SwerveDrive4Kinematics = SwerveDrive4Kinematics(

@@ -30,7 +30,7 @@ from services.questnav.questnav_data import PoseFrame
 from services.questnav.questnav_stub import QuestNavStub
 from robot import Robot
 from sim.swerve_drive_sim import SwerveDriveSim
-
+import wpimath
 
 class QuestNavSim:
     def __init__(self, physics_controller: PhysicsInterface, questnav: QuestNavStub):
@@ -69,6 +69,8 @@ class PhysicsEngine:
             pose = self.physics_controller.get_pose()
 
             # Update the gyro sim
-            self._gyroSim.setGyroAngleZ(pose.rotation().degrees())
+            # BUG: degrees() is returning radians for some reason. Things are weird.
+            rot = units.radiansToDegrees(pose.rotation().degrees())
+            self._gyroSim.setGyroAngleZ(rot)
         else:
             pass

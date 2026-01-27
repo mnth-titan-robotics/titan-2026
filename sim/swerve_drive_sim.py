@@ -10,12 +10,12 @@ from wpimath.kinematics import ChassisSpeeds, SwerveModuleState
 from subsystems.drive import Drive, DriveConstants
 from wpimath.geometry import Pose2d, Rotation2d, Translation2d
 from wpilib import RobotController
-
+from wpimath import units
 # Simulation constants
 # 5-G acceleration
 kdrivingMotorSimSlew: float = 9.8 * 5
 # The "free spinning" speed of the turning motor in rad/s
-kturningMotorSimSpeed: float = 1.0  # 31.0
+kturningMotorSimSpeed: float = units.rotationsToRadians(4)
 kturningMotorSimD: float = 0.0
 
 
@@ -76,7 +76,7 @@ class SwerveDriveSim:
             targetAngle = self._turnSparkSim.getSetpoint()
             curAngle = wpimath.angleModulus(self._turnSparkSim.getPosition())
             self._turnController.setSetpoint(targetAngle)
-            turnVelocity = self._turnController.calculate(curAngle)
+            turnVelocity = self._turnController.calculate(curAngle) * self._turnSparkSim.getAbsoluteEncoderSim().getVelocityConversionFactor()
             self._turnSparkSim.iterate(
                 turnVelocity,
                 vbus,
@@ -100,9 +100,11 @@ class SwerveDriveSim:
 
     def simulationPeriodic(self, dt: float) -> ChassisSpeeds:
         vBus = RobotController.getBatteryVoltage()
+        moduleStates = list()
         for module in self._modules:
             module.simulationPeriodic(vBus, dt)
-        moduleStates = tuple(module.getState() for module in self._modules)
+            moduleStates.append(module.getState())
+        moduleStates = tuple(moduleStates)
         chassisSpeeds: ChassisSpeeds = self._kinematics.toChassisSpeeds(moduleStates)  # type: ignore
         return chassisSpeeds
 

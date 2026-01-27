@@ -4,6 +4,7 @@
 # the WPILib BSD license file in the root directory of this project.
 #
 
+from email import utils
 from typing import Callable
 
 from commands2 import Subsystem, Command
@@ -53,12 +54,13 @@ class Drive(Subsystem):
     
     self._desiredStatePublisher = networkTable.getStructArrayTopic("Swerve/Modules/DesiredStates", SwerveModuleState).publish()
     self._statePublisher = networkTable.getStructArrayTopic("Swerve/Modules/States", SwerveModuleState).publish()
-    self._publisher = networkTable.getStructTopic("Swerve/Pose", Pose2d).publish()
+    self._posePublisher = networkTable.getStructTopic("Swerve/Pose", Pose2d).publish()
+    self._anglePublisher = networkTable.getStructTopic("Swerve/Angle", Rotation2d).publish()
 
     # Odometry class for tracking robot pose
     self._odometry = SwerveDrive4Odometry(
       DriveConstants.kDriveKinematics,
-      Rotation2d.fromDegrees(self._gyro.getAngle(IMUAxis.kZ)),
+      self._get_gyro_angle(),
       (
         self._frontLeft.getPosition(),
         self._frontRight.getPosition(),
@@ -69,7 +71,7 @@ class Drive(Subsystem):
 
   def periodic(self) -> None:
     self._odometry.update(
-      Rotation2d.fromDegrees(self._gyro.getAngle(IMUAxis.kZ)),
+      self._get_gyro_angle(),
       (
         self._frontLeft.getPosition(),
         self._frontRight.getPosition(),
@@ -80,7 +82,7 @@ class Drive(Subsystem):
     self.updateTelemetry()
 
   def updateTelemetry(self) -> None:
-    self._publisher.set(self.getPose())
+    self._posePublisher.set(self.getPose())
 
     self._statePublisher.set([
       self._frontLeft.getState(),
@@ -95,6 +97,8 @@ class Drive(Subsystem):
       self._rearLeft.getDesiredState(),
       self._rearRight.getDesiredState()
     ])
+    
+    self._anglePublisher.set(self._get_gyro_angle())
 
   def getPose(self) -> Pose2d:
     """
@@ -109,7 +113,7 @@ class Drive(Subsystem):
     :param pose: The pose to which to set the odometry.
     """
     self._odometry.resetPosition(
-      Rotation2d.fromDegrees(self._gyro.getAngle(IMUAxis.kZ)),
+      self._get_gyro_angle(),
       (
         self._frontLeft.getPosition(),
         self._frontRight.getPosition(),
@@ -117,6 +121,20 @@ class Drive(Subsystem):
         self._rearRight.getPosition()
       ),
       pose)
+  
+  def driveJoystickCommand(
+      self,
+      get_x: Callable[[], float],
+      get_y: Callable[[], float],
+      get_omega: Callable[[], float]) -> Command:
+        """Returns a command that drives the robot with joystick input"""
+        return self.driveCommand(
+            lambda: ChassisSpeeds(
+               get_x() * DriveConstants.kMaxSpeedMetersPerSecond,
+               get_y() * DriveConstants.kMaxSpeedMetersPerSecond,
+               get_omega() * DriveConstants.kMaxAngularSpeed
+            )
+        )
     
   def driveCommand(
             self,
@@ -128,11 +146,7 @@ class Drive(Subsystem):
 
   def _set_chassis_speed(self, chassisSpeeds: ChassisSpeeds) -> None:
     swerveModuleStates = DriveConstants.kDriveKinematics.toSwerveModuleStates(chassisSpeeds)
-    SwerveDrive4Kinematics.desaturateWheelSpeeds(swerveModuleStates, DriveConstants.kMaxSpeedMetersPerSecond)
-    self._frontLeft.setDesiredState(swerveModuleStates[0])
-    self._frontRight.setDesiredState(swerveModuleStates[1])
-    self._rearLeft.setDesiredState(swerveModuleStates[2])
-    self._rearRight.setDesiredState(swerveModuleStates[3])
+    self._set_module_states(swerveModuleStates)
 
   def setX(self) -> None:
     """
@@ -162,6 +176,9 @@ class Drive(Subsystem):
     self._rearLeft.resetEncoders()
     self._frontRight.resetEncoders()
     self._rearRight.resetEncoders()
+  
+  def _get_gyro_angle(self) -> Rotation2d:
+    return Rotation2d.fromDegrees(self._gyro.getAngle(IMUAxis.kZ))
 
   def zeroHeading(self) -> None:
     """
@@ -174,7 +191,7 @@ class Drive(Subsystem):
     Returns the heading of the robot.
     :return: The robot's heading in degrees, from -180 to 180
     """
-    return Rotation2d.fromDegrees(self._gyro.getAngle(IMUAxis.kZ)).getDegrees()
+    return self._get_gyro_angle().degrees()
 
   def getTurnRate(self) -> float:
     """
