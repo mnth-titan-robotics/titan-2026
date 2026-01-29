@@ -34,3 +34,17 @@ class Intake(Subsystem):
         def command_function():
             self._motor.set(0)
         return self.run(command_function).withName("IntakeStop")
+    
+    def extend(self) -> Command:
+        """Extends the intake mechanism."""
+        def command_function():
+            # Placeholder for extension logic
+            pass
+        return self.run(command_function).withName("IntakeExtend")
+    
+    def retract(self)-> Command:
+        """Retracts the intake mechanism."""
+        def command_function():
+            # Placeholder for retraction logic
+            pass
+        return self.run(command_function).withName("IntakeRetract")

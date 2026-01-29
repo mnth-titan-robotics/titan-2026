@@ -16,3 +16,15 @@ class Climber(Subsystem):
         self._motor.setCANTimeout(250)
         spark_config = rev.SparkMaxConfig()
         self._motor.applySparkMaxConfig(spark_config)
+
+    def climb(self) -> Command:
+        """Starts the climber at climb speed."""
+        def command_function():
+            pass
+        return self.run(command_function).withName("ClimberStart")
+
+    def descend(self) -> Command:
+        """Reverses the climber."""
+        def command_function():
+            pass
+        return self.run(command_function).withName("ClimberDescend")
