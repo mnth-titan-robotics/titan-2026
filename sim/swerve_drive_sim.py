@@ -1,22 +1,28 @@
 import math
 import random
 import wpimath
-from subsystems.max_swerve_module import MAXSwerveModule
 from rev import SparkFlex, SparkFlexSim, SparkMax, SparkMaxSim
-from wpimath.system.plant import DCMotor
-from wpimath.filter import SlewRateLimiter
-from wpimath.controller import PIDController
-from wpimath.kinematics import ChassisSpeeds, SwerveModuleState
-from subsystems.drive import Drive, DriveConstants
-from wpimath.geometry import Pose2d, Rotation2d, Translation2d
 from wpilib import RobotController
+from wpilib.simulation import DCMotorSim
 from wpimath import units
+from wpimath.controller import PIDController
+from wpimath.filter import SlewRateLimiter
+from wpimath.geometry import Pose2d, Rotation2d, Translation2d
+from wpimath.kinematics import ChassisSpeeds, SwerveModuleState
+from wpimath.system.plant import DCMotor, LinearSystemId
+from subsystems.drive import Drive, DriveConstants
+from subsystems.max_swerve_module import MAXSwerveModule
+from constants import ModuleConstants
+
 # Simulation constants
 # 5-G acceleration
 kdrivingMotorSimSlew: float = 9.8 * 5
 # The "free spinning" speed of the turning motor in rad/s
 kturningMotorSimSpeed: float = units.rotationsToRadians(4)
 kturningMotorSimD: float = 0.0
+
+kDrivingMotor = DCMotor.NEO(1)
+kTurningMotor = DCMotor.NEO550(1)
 
 
 def clamp(val: float, a: float, b: float) -> float:
@@ -32,20 +38,35 @@ def clampPose(pose: Pose2d) -> Pose2d:
     return Pose2d(translation, pose.rotation())
 
 
-def _createSim(motor: SparkFlex | SparkMax) -> SparkFlexSim | SparkMaxSim:
-    match motor:
+def _createSim(motor_controller: SparkFlex | SparkMax, motor: DCMotor) -> SparkFlexSim | SparkMaxSim:
+    match motor_controller:
         case SparkFlex():
-            return SparkFlexSim(motor, DCMotor.NEO(1))
+            return SparkFlexSim(motor_controller, motor)
         case SparkMax():
-            return SparkMaxSim(motor, DCMotor.NEO(1))
+            return SparkMaxSim(motor_controller, motor)
 
 
 class SwerveDriveSim:
     _pose: Pose2d = Pose2d()
+
     class SwerveModuleSim:
         def __init__(self, module: MAXSwerveModule):
-            self._driveSparkSim = _createSim(module._drivingSpark)
-            self._turnSparkSim = _createSim(module._turningSpark)
+            self._driveSparkSim = _createSim(module._drivingSpark, kDrivingMotor)
+            self._turnSparkSim = _createSim(module._turningSpark, kTurningMotor)
+            self._driveMotorSim = DCMotorSim(
+                LinearSystemId.DCMotorSystem(
+                    kDrivingMotor, 
+                    units.kilogram_square_meters(2.0), 
+                    ModuleConstants.kDrivingMotorReduction),
+                kDrivingMotor
+            )
+            self._turnMotorSim = DCMotorSim(
+                LinearSystemId.DCMotorSystem(
+                    kTurningMotor,
+                    units.kilogram_square_meters(0.1),
+                    ModuleConstants.kTurningMotorReduction),
+                kTurningMotor
+            )
             self._angularOffset = module._chassisAngularOffset
 
             # Calculates the velocity of the drive motor, simulating inertia and friction
@@ -63,9 +84,11 @@ class SwerveDriveSim:
             self._turnSparkSim.setPosition(random.uniform(-math.pi, math.pi))
 
         def simulationPeriodic(self, vbus: float, dt: float):
-            # m/s
-            targetVelocity = self._driveSparkSim.getSetpoint()
-            driveVelocity = self._driveRateLimiter.calculate(targetVelocity)
+            d_factor = self._driveSparkSim.getRelativeEncoderSim().getVelocityConversionFactor()
+            d_v = self._driveSparkSim.getAppliedOutput() * vbus
+            self._driveMotorSim.setInputVoltage(d_v)
+            self._driveMotorSim.update(dt)
+            driveVelocity = d_factor * self._driveMotorSim.getAngularVelocity()
             self._driveSparkSim.iterate(
                 driveVelocity,
                 vbus,
@@ -73,10 +96,11 @@ class SwerveDriveSim:
             )
 
             # rad
-            targetAngle = self._turnSparkSim.getSetpoint()
-            curAngle = wpimath.angleModulus(self._turnSparkSim.getPosition())
-            self._turnController.setSetpoint(targetAngle)
-            turnVelocity = self._turnController.calculate(curAngle) * self._turnSparkSim.getAbsoluteEncoderSim().getVelocityConversionFactor()
+            t_factor = self._turnSparkSim.getAbsoluteEncoderSim().getVelocityConversionFactor()
+            t_v = self._turnSparkSim.getAppliedOutput() * vbus
+            self._turnMotorSim.setInputVoltage(t_v)
+            self._turnMotorSim.update(dt)
+            turnVelocity = t_factor * self._turnMotorSim.getAngularVelocity()
             self._turnSparkSim.iterate(
                 turnVelocity,
                 vbus,

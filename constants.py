@@ -92,6 +92,8 @@ class ModuleConstants:
     kDrivingMotorReduction: float = (45.0 * 22) / (kDrivingMotorPinionTeeth * 15)
     kDriveWheelFreeSpeedRps: float = (kDrivingMotorFreeSpeedRps * kWheelCircumferenceMeters) / kDrivingMotorReduction
 
+    kTurningMotorReduction: float = 9424.0 / 203.0
+
     # Simulation constants
     # 5-G acceleration
     kdrivingMotorSimSlew: float = 9.8 * 5

@@ -70,7 +70,7 @@ class PhysicsEngine:
 
             # Update the gyro sim
             # BUG: degrees() is returning radians for some reason. Things are weird.
-            rot = units.radiansToDegrees(pose.rotation().degrees())
+            rot = pose.rotation().degrees()
             self._gyroSim.setGyroAngleZ(rot)
         else:
             pass
