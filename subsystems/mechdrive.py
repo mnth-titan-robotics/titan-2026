@@ -1,6 +1,6 @@
 from typing import Callable
 
-from commands2 import Subsystem, Command
+from commands2 import Subsystem, Command, cmd
 from ntcore import NetworkTableInstance
 from wpilib import ADIS16470_IMU
 from wpilib import SendableChooser
@@ -15,22 +15,24 @@ import constants
 from lib.classes import MotorIdleMode, SpeedMode, DriveOrientation, OptionState
 from lib.differential_module import DifferentialModule
 from lib.enums import ModuleLocation
+from services import Tracker
 
 IMUAxis = ADIS16470_IMU.IMUAxis
-DriveConstants = constants.Subsystems.Drive
+DriveConstants = constants.Subsystems.Drive.Mecanum
 
 
 class Drive(Subsystem):
-    def __init__(self):
+    def __init__(self, tracker: Tracker):
+        self._tracker = tracker
         super().__init__()
 
         self._gyro = ADIS16470_IMU()
 
         networkTable = NetworkTableInstance.getDefault()
 
-        self._publisher = networkTable.getStructTopic("Mecanum/Pose", Pose2d).publish()
+        self._pose_publisher = networkTable.getStructTopic("Mecanum/Pose", Pose2d).publish()
 
-        self._constants = constants.Subsystems.Drive.Mecanum
+        self._constants = DriveConstants
 
         self._differentialModules = dict((c.location, DifferentialModule(c)) for c in self._constants.kDifferentialModuleConfigs)
 
@@ -74,42 +76,56 @@ class Drive(Subsystem):
         idleModeChooser = SendableChooser()
         idleModeChooser.setDefaultOption(MotorIdleMode.Brake.name, MotorIdleMode.Brake)
         idleModeChooser.addOption(MotorIdleMode.Coast.name, MotorIdleMode.Coast)
-        idleModeChooser.onChange(lambda idleMode: self._setIdleMode(idleMode))
+        idleModeChooser.onChange(lambda idleMode: self._set_idle_mode(idleMode))
 
         self._odometry = MecanumDriveOdometry(
             self._constants.kDriveKinematics,
             Rotation2d.fromDegrees(self._gyro.getAngle(IMUAxis.kZ)),
-            self._getModulePositions()
+            self._get_module_positions()
         )
 
     def periodic(self) -> None:
-        self._updateTelemetry()
+        self._update_telemetry()
 
-    def _updateTelemetry(self) -> None:
-        self._publisher.set(self.getPose())
+    def _update_telemetry(self) -> None:
+        self._pose_publisher.set(self.get_pose())
 
-    def getPose(self) -> Pose2d:
+    def get_pose(self) -> Pose2d:
         """
         Returns the currently-estimated pose of the robot.
         :return: The pose.
         """
         return self._odometry.getPose()
 
-    def resetOdometry(self, pose: Pose2d) -> None:
+    def reset_odometry(self, pose: Pose2d) -> None:
         self._odometry.resetPose(pose)
 
-    def driveCommand(
+    def drive_joystick_command(
+            self,
+            get_x: Callable[[], float],
+            get_y: Callable[[], float],
+            get_omega: Callable[[], float]) -> Command:
+        """Returns a command that drives the robot with joystick input"""
+        return self.drive_command(
+            lambda: ChassisSpeeds(
+                get_x() * DriveConstants.kMaxSpeedMetersPerSecond,
+                get_y() * DriveConstants.kMaxSpeedMetersPerSecond,
+                get_omega() * DriveConstants.kMaxAngularSpeed
+            )
+        )
+
+    def drive_command(
             self,
             get_input: Callable[[], ChassisSpeeds]) -> Command:
         """Returns a command that drives the robot"""
         return self.run(
-            lambda: self.setChassisSpeed(get_input())
+            lambda: self._set_chassis_speed(get_input())
         ).withName("DriveSubsystem:Drive")
 
-    def drive(self, xSpeed: float, ySpeed: float, rot: float, fieldRelative: bool) -> None:
-        pass
+    def set_x_command(self) -> Command:
+        return cmd.none()
 
-    def setChassisSpeed(self, chassisSpeeds: ChassisSpeeds) -> None:
+    def _set_chassis_speed(self, chassisSpeeds: ChassisSpeeds) -> None:
         self._drivetrain.driveCartesian(
             xSpeed=chassisSpeeds.vx,
             ySpeed=chassisSpeeds.vy,
@@ -117,7 +133,7 @@ class Drive(Subsystem):
             gyroAngle=Rotation2d()
         )
 
-    def _getModulePositions(self) -> MecanumDriveWheelPositions:
+    def _get_module_positions(self) -> MecanumDriveWheelPositions:
         wheel_positions = MecanumDriveWheelPositions()
         wheel_positions.frontLeft = self._differentialModules[ModuleLocation.LeftFront].getPosition()
         wheel_positions.frontRight = self._differentialModules[ModuleLocation.RightFront].getPosition()
@@ -125,19 +141,19 @@ class Drive(Subsystem):
         wheel_positions.rearRight = self._differentialModules[ModuleLocation.RightRear].getPosition()
 
         return wheel_positions
+    
+    def _get_wheel_speeds(self) -> MecanumDriveWheelSpeeds:
+        wheel_speeds = MecanumDriveWheelSpeeds()
+        wheel_speeds.frontLeft = self._differentialModules[ModuleLocation.LeftFront].getVelocity()
+        wheel_speeds.frontRight = self._differentialModules[ModuleLocation.RightFront].getVelocity()
+        wheel_speeds.rearLeft = self._differentialModules[ModuleLocation.LeftRear].getVelocity()
+        wheel_speeds.rearRight = self._differentialModules[ModuleLocation.RightRear].getVelocity()
+        return wheel_speeds        
 
-    def getChassisSpeeds(self) -> ChassisSpeeds:
-        wheel_velocities = MecanumDriveWheelSpeeds()
-        wheel_velocities.frontLeft = self._differentialModules[ModuleLocation.LeftFront].getVelocity()
-        wheel_velocities.frontRight = self._differentialModules[ModuleLocation.RightFront].getVelocity()
-        wheel_velocities.rearLeft = self._differentialModules[ModuleLocation.LeftRear].getVelocity()
-        wheel_velocities.rearRight = self._differentialModules[ModuleLocation.RightRear].getVelocity()
-        return self._constants.kDriveKinematics.toChassisSpeeds(wheel_velocities)
+    def _get_chassis_speeds(self) -> ChassisSpeeds:
+        return self._constants.kDriveKinematics.toChassisSpeeds(self._get_wheel_speeds())
 
-    def _setIdleMode(self, idleMode: MotorIdleMode) -> None:
+    def _set_idle_mode(self, idleMode: MotorIdleMode) -> None:
         # TODO: implement idleMode change on motor controllers
         # SmartDashboard.putString("Robot/Drive/IdleMode/selected", idleMode.name)
-        pass
-
-    def setX(self) -> None:
         pass

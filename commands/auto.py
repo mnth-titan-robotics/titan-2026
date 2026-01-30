@@ -38,6 +38,6 @@ class Auto:
         drive = self._robot._drive
         speeds = ChassisSpeeds(vx=0.25)
         return cmd.sequence(
-            drive.driveCommand(speeds).withTimeout(3.25),
+            drive.drive_command(speeds).withTimeout(3.25),
             drive.stopCommand().withTimeout(0.1)
         )

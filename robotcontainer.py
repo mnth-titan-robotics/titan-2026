@@ -10,9 +10,7 @@ import constants
 from subsystems import Drive, Launcher, Intake
 from commands.auto import Auto
 from commands.game import Game
-from wpimath.kinematics import ChassisSpeeds
 from services import Tracker, TrackerConstants, Localization
-from services.questnav import QuestNav
 from lib import utils
 
 # Create an alias to simplify usage
@@ -71,7 +69,7 @@ class RobotContainer:
 
         # Set default commands for all subsystems
         self._drive.setDefaultCommand(
-            self._drive.driveJoystickCommand(
+            self._drive.drive_joystick_command(
                 lambda: -utils.apply_deadband(self._driverController.getLeftY()),
                 lambda: -utils.apply_deadband(self._driverController.getLeftX()),
                 lambda: -utils.apply_deadband(self._driverController.getRightX())

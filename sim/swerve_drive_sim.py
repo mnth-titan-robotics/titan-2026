@@ -10,8 +10,7 @@ from wpimath.filter import SlewRateLimiter
 from wpimath.geometry import Pose2d, Rotation2d, Translation2d
 from wpimath.kinematics import ChassisSpeeds, SwerveModuleState
 from wpimath.system.plant import DCMotor, LinearSystemId
-from subsystems.drive import Drive, DriveConstants
-from subsystems.max_swerve_module import MAXSwerveModule
+from subsystems import Drive, DriveConstants, MAXSwerveModule
 from constants import ModuleConstants
 
 # Simulation constants

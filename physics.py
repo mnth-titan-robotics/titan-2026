@@ -18,19 +18,21 @@
 #
 # Examples can be found at https://github.com/robotpy/examples
 
-import wpilib
 from random import gauss
+
+import wpilib
+from pyfrc.physics.core import PhysicsInterface
 from wpilib import RobotController
 from wpilib.simulation import ADIS16470_IMUSim
 from wpimath import units
 from wpimath.geometry import Pose3d, Rotation3d
 from wpimath.interpolation import TimeInterpolatablePose2dBuffer
-from pyfrc.physics.core import PhysicsInterface
+
+from robot import Robot
 from services.questnav.questnav_data import PoseFrame
 from services.questnav.questnav_stub import QuestNavStub
-from robot import Robot
-from sim.swerve_drive_sim import SwerveDriveSim
-import wpimath
+from sim.mecanum_sim import MecanumSim
+
 
 class QuestNavSim:
     def __init__(self, physics_controller: PhysicsInterface, questnav: QuestNavStub):
@@ -57,7 +59,8 @@ class PhysicsEngine:
         self._robot = robot
         self.physics_controller = physics_controller
         self._questNavSim = QuestNavSim(physics_controller, robot.container._localization._questnav)
-        self._driveSim = SwerveDriveSim(robot.container._drive)
+        # self._driveSim = SwerveDriveSim(robot.container._drive)
+        self._driveSim = MecanumSim(robot.container._drive)
         self._gyroSim = ADIS16470_IMUSim(robot.container._drive._gyro)
 
     def update_sim(self, now: float, tm_diff: float) -> None:
