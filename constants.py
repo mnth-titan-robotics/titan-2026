@@ -3,7 +3,7 @@ from lib.classes import *
 from wpimath import units
 from wpimath.kinematics import SwerveDrive4Kinematics
 from wpimath.trajectory import TrapezoidProfile
-from wpimath.geometry import Translation2d
+from wpimath.geometry import Transform3d, Translation3d, Rotation3d, Pose3d, Translation2d
 import math
 
 
@@ -22,11 +22,7 @@ class Subsystems:
         kMaxSpeedMetersPerSecond: float = 12
         kMaxAngularSpeed: float = 2.0 * math.pi
 
-        # Chassis configuration
-        # Distance between centers of right and left wheels on robot
         kTrackWidth: units.meters = units.inchesToMeters(26.5)
-        
-        # Distance between front and back wheels on robot
         kWheelBase: units.meters = units.inchesToMeters(26.5)
 
         kDriveKinematics: SwerveDrive4Kinematics = SwerveDrive4Kinematics(
@@ -91,8 +87,6 @@ class ModuleConstants:
     # teeth on the bevel pinion
     kDrivingMotorReduction: float = (45.0 * 22) / (kDrivingMotorPinionTeeth * 15)
     kDriveWheelFreeSpeedRps: float = (kDrivingMotorFreeSpeedRps * kWheelCircumferenceMeters) / kDrivingMotorReduction
-
-    kTurningMotorReduction: float = 9424.0 / 203.0
 
     # Simulation constants
     # 5-G acceleration

@@ -7,9 +7,7 @@
 import enum
 import commands2
 import constants
-from subsystems.drive import Drive
-from subsystems.launcher import Launcher
-from subsystems.intake import Intake
+from subsystems import Drive, Launcher, Intake
 from commands.auto import Auto
 from commands.game import Game
 from wpimath.kinematics import ChassisSpeeds
@@ -110,7 +108,7 @@ class RobotContainer:
 
     def getAutonomousCommand(self) -> commands2.Command:
         """Use this to pass the autonomous command to the main {Robot} class.
-
+    
         :returns: the command to run in autonomous
         """
         return self.auto.get()
