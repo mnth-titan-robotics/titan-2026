@@ -1,7 +1,8 @@
-from commands2 import Subsystem, Command
-from typing import Callable
-import constants
 import rev
+from commands2 import Subsystem, Command
+
+import constants
+
 
 class Launcher(Subsystem):
     """Controls the launcher mechanism for firing projectiles."""
@@ -20,12 +21,16 @@ class Launcher(Subsystem):
 
     def start(self) -> Command:
         """Starts the launcher at launch speed."""
+
         def command_function():
             self._motor.set(self.Constants.LaunchSpeed)
+
         return self.run(command_function).withName("LauncherStart")
-    
+
     def stop(self) -> Command:
         """Stops the launcher."""
+
         def command_function():
             self._motor.set(0)
+
         return self.run(command_function).withName("LauncherStop")

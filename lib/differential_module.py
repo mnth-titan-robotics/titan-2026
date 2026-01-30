@@ -1,26 +1,29 @@
 import math
 from typing import Callable, Optional, Tuple
+
+from commands2 import Command, Subsystem
+from rev import SparkBaseConfig, SparkLowLevel, SparkMax, SparkFlex, ResetMode, PersistMode
 from wpilib import Timer
 from wpimath import units
-from rev import SparkBase, SparkBaseConfig, SparkLowLevel, SparkMax, SparkFlex, ResetMode, PersistMode
-from lib.classes import DifferentialModuleConfig, MotorIdleMode, MotorControllerType
-from wpimath.kinematics import MecanumDriveKinematics, MecanumDriveWheelSpeeds
 from wpimath.controller import HolonomicDriveController
-from commands2 import Command, Subsystem
+from wpimath.geometry import Pose2d, Rotation2d
+from wpimath.kinematics import MecanumDriveKinematics, MecanumDriveWheelSpeeds
 from wpimath.trajectory import Trajectory
 
-from wpimath.geometry import Pose2d, Rotation2d
+from lib.classes import DifferentialModuleConfig, MotorIdleMode, MotorControllerType
+
+
 class DifferentialModule:
     def __init__(
-        self,
-        config: DifferentialModuleConfig
+            self,
+            config: DifferentialModuleConfig
     ) -> None:
         self._config = config
         self._baseKey = f'Robot/Drive/Modules/{self._config.location.name}'
 
         drivingMotorReduction: float = self._config.constants.drivingMotorReduction
         drivingEncoderPositionConversionFactor: float = (
-            self._config.constants.wheelDiameter * math.pi) / drivingMotorReduction
+                                                                self._config.constants.wheelDiameter * math.pi) / drivingMotorReduction
         if self._config.constants.drivingMotorControllerType == MotorControllerType.SparkFlex:
             self._drivingMotor = SparkFlex(self._config.drivingMotorCANId, SparkLowLevel.MotorType.kBrushless)
         else:
@@ -90,14 +93,14 @@ class DifferentialControllerCommand(Command):
     """
 
     def __init__(
-        self,
-        trajectory: Trajectory,
-        pose: Callable[[], Pose2d],
-        kinematics: MecanumDriveKinematics,
-        controller: HolonomicDriveController,
-        outputModuleStates: Callable[[MecanumDriveWheelSpeeds], None],
-        requirements: Tuple[Subsystem],
-        desiredRotation: Optional[Callable[[], Rotation2d]] = None,
+            self,
+            trajectory: Trajectory,
+            pose: Callable[[], Pose2d],
+            kinematics: MecanumDriveKinematics,
+            controller: HolonomicDriveController,
+            outputModuleStates: Callable[[MecanumDriveWheelSpeeds], None],
+            requirements: Tuple[Subsystem],
+            desiredRotation: Optional[Callable[[], Rotation2d]] = None,
     ) -> None:
         """
         Constructs a new SwerveControllerCommand that when executed will follow the
@@ -148,7 +151,7 @@ class DifferentialControllerCommand(Command):
             self._pose(), desiredState, self._desiredRotation()
         )
         wheelSpeeds = self._kinematics.toWheelSpeeds(targetChassisSpeeds)
-        
+
         self._outputModuleStates(wheelSpeeds)
 
     def end(self, interrupted):

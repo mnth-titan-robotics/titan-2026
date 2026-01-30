@@ -1,7 +1,8 @@
 ﻿from typing import TYPE_CHECKING
-from wpimath.kinematics import ChassisSpeeds
+
 from commands2 import Command, cmd
 from wpilib import SendableChooser, SmartDashboard
+from wpimath.kinematics import ChassisSpeeds
 
 if TYPE_CHECKING:
     from robotcontainer import RobotContainer

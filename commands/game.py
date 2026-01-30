@@ -1,11 +1,13 @@
 ﻿import math
 from typing import TYPE_CHECKING, Callable
+
 from commands2 import Command
 from wpimath.controller import HolonomicDriveController, PIDController, ProfiledPIDControllerRadians
 from wpimath.geometry import Pose2d
 from wpimath.trajectory import Trajectory, TrapezoidProfileRadians
-from lib.differential_module import DifferentialControllerCommand
+
 import constants
+from lib.differential_module import DifferentialControllerCommand
 
 if TYPE_CHECKING:
     from robotcontainer import RobotContainer
@@ -39,7 +41,7 @@ class Game:
         """Returns a command that drives the robot along the provided trajectory"""
         DriveConstants = constants.Subsystems.Drive
         driveSubsystem = self._robot._drive
-        
+
         x_controller = PIDController(
             P=DriveConstants.TranslationPID.P,
             I=DriveConstants.TranslationPID.I,

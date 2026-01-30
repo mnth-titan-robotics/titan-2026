@@ -1,10 +1,10 @@
-from lib.enums import *
-from lib.classes import *
 from wpimath import units
-from wpimath.kinematics import SwerveDrive4Kinematics
+from wpimath.geometry import Translation2d
+from wpimath.kinematics import SwerveDrive4Kinematics, MecanumDriveKinematics
 from wpimath.trajectory import TrapezoidProfile
-from wpimath.geometry import Transform3d, Translation3d, Rotation3d, Pose3d, Translation2d
 import math
+from lib.classes import MotorControllerType, DifferentialModuleConstants, DifferentialModuleConfig, DriftCorrectionConstants, PID, Tolerance
+from lib.enums import ModuleLocation
 
 
 class Controllers:
@@ -19,6 +19,58 @@ class NeoMotorConstants:
 
 class Subsystems:
     class Drive:
+        class Mecanum:
+            kDriftCorrectionConstants = DriftCorrectionConstants(
+                rotationPID=PID(0.01, 0, 0),
+                rotationTolerance=Tolerance(0.5, 1.0)
+            )
+
+            kTrackWidth: units.meters = units.inchesToMeters(23)
+            kWheelBase: units.meters = units.inchesToMeters(27.5)
+
+            kTranslationSpeedMax: units.meters_per_second = 4.8
+            kRotationSpeedMax: units.radians_per_second = 2 * math.pi  # type: ignore
+
+            kInputLimitDemo: units.percent = 0.5
+            kInputRateLimitDemo: units.percent = 0.33
+
+            _differentialModuleConstants = DifferentialModuleConstants(
+                wheelDiameter=units.inchesToMeters(3.0),
+                drivingMotorControllerType=MotorControllerType.SparkMax,
+                drivingMotorCurrentLimit=50,
+                drivingMotorReduction=8.46
+            )
+
+            kDifferentialModuleConfigs: tuple[DifferentialModuleConfig, ...] = (
+                DifferentialModuleConfig(
+                    location=ModuleLocation.LeftFront,
+                    drivingMotorCANId=10,
+                    isInverted=False,
+                    constants=_differentialModuleConstants),
+                DifferentialModuleConfig(
+                    location=ModuleLocation.LeftRear,
+                    drivingMotorCANId=11,
+                    isInverted=False,
+                    constants=_differentialModuleConstants),
+                DifferentialModuleConfig(
+                    location=ModuleLocation.RightFront,
+                    drivingMotorCANId=12,
+                    isInverted=True,
+                    constants=_differentialModuleConstants),
+                DifferentialModuleConfig(
+                    location=ModuleLocation.RightRear,
+                    drivingMotorCANId=13,
+                    isInverted=True,
+                    constants=_differentialModuleConstants)
+            )
+
+            kDriveKinematics = MecanumDriveKinematics(
+                Translation2d(kWheelBase / 2.0, kTrackWidth / 2.0),
+                Translation2d(kWheelBase / 2.0, -kTrackWidth / 2.0),
+                Translation2d(-kWheelBase / 2.0, kTrackWidth / 2.0),
+                Translation2d(-kWheelBase / 2.0, -kTrackWidth / 2.0)
+            )
+
         kMaxSpeedMetersPerSecond: float = 12
         kMaxAngularSpeed: float = 2.0 * math.pi
 
@@ -32,7 +84,7 @@ class Subsystems:
             Translation2d(-kWheelBase / 2, -kTrackWidth / 2)
         )
 
-         # Angular offsets of the modules relative to the chassis in radians
+        # Angular offsets of the modules relative to the chassis in radians
         kFrontLeftChassisAngularOffset = -math.pi / 2
         kFrontRightChassisAngularOffset = 0
         kRearLeftChassisAngularOffset = math.pi
@@ -107,7 +159,7 @@ class AutoConstants:
 
     # Constraint for the motion profiled robot angle controller
     kThetaControllerConstraints = TrapezoidProfile.Constraints(
-    kMaxAngularSpeedRadiansPerSecond, kMaxAngularSpeedRadiansPerSecondSquared)
+        kMaxAngularSpeedRadiansPerSecond, kMaxAngularSpeedRadiansPerSecondSquared)
 
 
 class Roller:

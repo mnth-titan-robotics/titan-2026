@@ -1,8 +1,10 @@
-from typing import NamedTuple
-from lib.enums import *
 from dataclasses import dataclass
+from typing import NamedTuple
+
 from wpimath import units
 from wpimath.geometry import Translation2d, Transform3d
+
+from lib.enums import *
 
 
 class PID(NamedTuple):
