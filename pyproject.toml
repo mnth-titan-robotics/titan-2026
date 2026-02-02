@@ -6,24 +6,27 @@ robotpy_version = "2026.2.1"
 # -> equivalent to `pip install robotpy[extra1, ...]
 components = [
     # "all",
-    "hal",
+    # "hal",
     "apriltag",
     "commands2",
     # "cscore",
     # "navx",
-    "pathplannerlib",
+    # "pathplannerlib",
     # "phoenix5",
     # "phoenix6",
     # "photonvision",
     # "playingwithfusion",
-    "rev",
+    # "rev",
     # "romi",
     "sim",
     # "xrp",
-    "questnav",
+    # "questnav",
 ]
 
 # Other pip packages to install
 requires = [
-    "protobuf~=6.33.4"
+    "protobuf~=6.33.4",
+    "robotpy-hal==2026.2.1",
+    "robotpy-pathplannerlib==2026.1.2",
+    "robotpy-rev==2026.0.1"
 ]

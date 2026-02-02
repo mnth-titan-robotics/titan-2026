@@ -10,19 +10,20 @@ class Intake(Subsystem):
     Constants = constants.Subsystems.Intake()
 
     def __init__(self):
-        self._motor = rev.SparkMax(
-            self.Constants.MotorId,
-            rev.SparkBase.MotorType.kBrushed
-        )
-        self._motor.setCANTimeout(250)
-        spark_config = rev.SparkMaxConfig()
-        self._motor.configure(spark_config, rev.ResetMode.kResetSafeParameters, rev.PersistMode.kPersistParameters)
+        # self._motor = rev.SparkMax(
+        #     self.Constants.MotorId,
+        #     rev.SparkBase.MotorType.kBrushed
+        # )
+        # self._motor.setCANTimeout(250)
+        # spark_config = rev.SparkMaxConfig()
+        # self._motor.configure(spark_config, rev.ResetMode.kResetSafeParameters, rev.PersistMode.kPersistParameters)
+        pass
 
     def intake(self) -> Command:
         """Starts the intake at intake speed."""
-
         def command_function():
-            self._motor.set(self.Constants.IntakeSpeed)
+            # self._motor.set(self.Constants.IntakeSpeed)
+            pass
 
         return self.run(command_function).withName("IntakeStart")
 
@@ -38,7 +39,8 @@ class Intake(Subsystem):
         """Stops the intake."""
 
         def command_function():
-            self._motor.set(0)
+            #self._motor.set(0)
+            pass
 
         return self.run(command_function).withName("IntakeStop")
 

@@ -16,7 +16,7 @@ from lib.classes import MotorIdleMode, SpeedMode, DriveOrientation, OptionState
 from lib.differential_module import DifferentialModule
 from lib.enums import ModuleLocation
 from services import Tracker
-
+from wpimath import units
 IMUAxis = ADIS16470_IMU.IMUAxis
 DriveConstants = constants.Subsystems.Drive.Mecanum
 
@@ -31,17 +31,20 @@ class Drive(Subsystem):
         networkTable = NetworkTableInstance.getDefault()
 
         self._pose_publisher = networkTable.getStructTopic("Mecanum/Pose", Pose2d).publish()
+        self._dx_publisher = networkTable.getDoubleTopic("Mecanum/Dx").publish()
+        self._dy_publisher = networkTable.getDoubleTopic("Mecanum/Dy").publish()
+        self._domega_publisher = networkTable.getDoubleTopic("Mecanum/Domega").publish()
 
         self._constants = DriveConstants
 
         self._differentialModules = dict((c.location, DifferentialModule(c)) for c in self._constants.kDifferentialModuleConfigs)
 
-        self._drivetrain = MecanumDrive(
-            self._differentialModules[ModuleLocation.LeftFront].getMotorController(),
-            self._differentialModules[ModuleLocation.LeftRear].getMotorController(),
-            self._differentialModules[ModuleLocation.RightFront].getMotorController(),
-            self._differentialModules[ModuleLocation.RightRear].getMotorController()
-        )
+        # self._drivetrain = MecanumDrive(
+        #     self._differentialModules[ModuleLocation.LeftFront].getMotorController(),
+        #     self._differentialModules[ModuleLocation.LeftRear].getMotorController(),
+        #     self._differentialModules[ModuleLocation.RightFront].getMotorController(),
+        #     self._differentialModules[ModuleLocation.RightRear].getMotorController()
+        # )
 
         self._isDriftCorrectionActive: bool = False
         self._driftCorrectionController = PIDController(*self._constants.kDriftCorrectionConstants.rotationPID)
@@ -76,7 +79,7 @@ class Drive(Subsystem):
         idleModeChooser = SendableChooser()
         idleModeChooser.setDefaultOption(MotorIdleMode.Brake.name, MotorIdleMode.Brake)
         idleModeChooser.addOption(MotorIdleMode.Coast.name, MotorIdleMode.Coast)
-        idleModeChooser.onChange(lambda idleMode: self._set_idle_mode(idleMode))
+        idleModeChooser.onChange(self._set_idle_mode)
 
         self._odometry = MecanumDriveOdometry(
             self._constants.kDriveKinematics,
@@ -89,6 +92,8 @@ class Drive(Subsystem):
 
     def _update_telemetry(self) -> None:
         self._pose_publisher.set(self.get_pose())
+        for module in self._differentialModules.values():
+            module.updateTelemetry()
 
     def get_pose(self) -> Pose2d:
         """
@@ -106,13 +111,15 @@ class Drive(Subsystem):
             get_y: Callable[[], float],
             get_omega: Callable[[], float]) -> Command:
         """Returns a command that drives the robot with joystick input"""
-        return self.drive_command(
-            lambda: ChassisSpeeds(
-                get_x() * DriveConstants.kMaxSpeedMetersPerSecond,
-                get_y() * DriveConstants.kMaxSpeedMetersPerSecond,
-                get_omega() * DriveConstants.kMaxAngularSpeed
-            )
-        )
+        def speeds_callback() -> ChassisSpeeds:
+            dx = units.meters_per_second(get_x() * DriveConstants.kMaxSpeedMetersPerSecond)
+            dy = units.meters_per_second(get_y() * DriveConstants.kMaxSpeedMetersPerSecond)
+            domega = units.degrees_per_second(get_omega() * DriveConstants.kMaxAngularSpeed)
+            self._dx_publisher.set(dx)
+            self._dy_publisher.set(dy)
+            self._domega_publisher.set(domega)
+            return ChassisSpeeds(dx, dy, domega)
+        return self.drive_command(speeds_callback)
 
     def drive_command(
             self,
@@ -126,12 +133,21 @@ class Drive(Subsystem):
         return cmd.none()
 
     def _set_chassis_speed(self, chassisSpeeds: ChassisSpeeds) -> None:
-        self._drivetrain.driveCartesian(
-            xSpeed=chassisSpeeds.vx,
-            ySpeed=chassisSpeeds.vy,
-            zRotation=chassisSpeeds.omega,
-            gyroAngle=Rotation2d()
-        )
+        wheel_speeds = DriveConstants.kDriveKinematics.toWheelSpeeds(chassisSpeeds)
+        self._set_wheel_speeds(wheel_speeds)
+        # TODO: Implement field-centric driving
+        # self._drivetrain.driveCartesian(
+        #     xSpeed=chassisSpeeds.vx,
+        #     ySpeed=chassisSpeeds.vy,
+        #     zRotation=chassisSpeeds.omega,
+        #     gyroAngle=Rotation2d()
+        # )
+
+    def _set_wheel_speeds(self, wheelSpeeds: MecanumDriveWheelSpeeds) -> None:
+        self._differentialModules[ModuleLocation.LeftFront].setVelocity(wheelSpeeds.frontLeft)
+        self._differentialModules[ModuleLocation.RightFront].setVelocity(wheelSpeeds.frontRight)
+        self._differentialModules[ModuleLocation.LeftRear].setVelocity(wheelSpeeds.rearLeft)
+        self._differentialModules[ModuleLocation.RightRear].setVelocity(wheelSpeeds.rearRight)
 
     def _get_module_positions(self) -> MecanumDriveWheelPositions:
         wheel_positions = MecanumDriveWheelPositions()
@@ -148,7 +164,7 @@ class Drive(Subsystem):
         wheel_speeds.frontRight = self._differentialModules[ModuleLocation.RightFront].getVelocity()
         wheel_speeds.rearLeft = self._differentialModules[ModuleLocation.LeftRear].getVelocity()
         wheel_speeds.rearRight = self._differentialModules[ModuleLocation.RightRear].getVelocity()
-        return wheel_speeds        
+        return wheel_speeds
 
     def _get_chassis_speeds(self) -> ChassisSpeeds:
         return self._constants.kDriveKinematics.toChassisSpeeds(self._get_wheel_speeds())

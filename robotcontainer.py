@@ -65,14 +65,14 @@ class RobotContainer:
     def _initCommands(self):
         """Initializes commands. Should only be called from __init__"""
         self.game = Game(self)
-        self.auto = Auto(self)
+        self.auto = Auto(self, self.game)
 
         # Set default commands for all subsystems
         self._drive.setDefaultCommand(
             self._drive.drive_joystick_command(
-                lambda: -utils.apply_deadband(self._driverController.getLeftY()),
-                lambda: -utils.apply_deadband(self._driverController.getLeftX()),
-                lambda: -utils.apply_deadband(self._driverController.getRightX())
+                lambda: -utils.apply_deadband(self._driverController.getLeftY()) ** 3,
+                lambda: -utils.apply_deadband(self._driverController.getLeftX()) ** 3,
+                lambda: -utils.apply_deadband(self._driverController.getRightX())** 3
             )
         )
         self._launcher.setDefaultCommand(

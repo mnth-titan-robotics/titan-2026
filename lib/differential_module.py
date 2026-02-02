@@ -3,6 +3,7 @@ from typing import Callable, Optional, Tuple
 
 from commands2 import Command, Subsystem
 from rev import SparkBaseConfig, SparkLowLevel, SparkMax, SparkFlex, ResetMode, PersistMode
+import ntcore
 from wpilib import Timer
 from wpimath import units
 from wpimath.controller import HolonomicDriveController
@@ -20,6 +21,8 @@ class DifferentialModule:
     ) -> None:
         self._config = config
         self._baseKey = f'Robot/Drive/Modules/{self._config.location.name}'
+        self.nt_instance = ntcore.NetworkTableInstance.getDefault()
+        self._velocity_publisher = self.nt_instance.getTable(self._baseKey).getDoubleTopic("Velocity").publish()
 
         drivingMotorReduction: float = self._config.constants.drivingMotorReduction
         drivingEncoderPositionConversionFactor: float = (
@@ -28,6 +31,7 @@ class DifferentialModule:
             self._drivingMotor = SparkFlex(self._config.drivingMotorCANId, SparkLowLevel.MotorType.kBrushless)
         else:
             self._drivingMotor = SparkMax(self._config.drivingMotorCANId, SparkLowLevel.MotorType.kBrushless)
+        self._drivingClosedLoop = self._drivingMotor.getClosedLoopController()
         self._drivingMotorConfig = SparkBaseConfig()
         (self._drivingMotorConfig
          .setIdleMode(SparkBaseConfig.IdleMode.kBrake)
@@ -35,6 +39,8 @@ class DifferentialModule:
          .secondaryCurrentLimit(self._config.constants.drivingMotorCurrentLimit)
          .inverted(self._config.isInverted)
          .voltageCompensation(11.0))
+        self._drivingMotorConfig.closedLoop.pidf(0.1, 0.0, 0.01, 0.1)
+        self._drivingMotorConfig.closedLoop.velocityFF(0.1)
         (self._drivingMotorConfig.encoder
          .positionConversionFactor(drivingEncoderPositionConversionFactor)
          .velocityConversionFactor(drivingEncoderPositionConversionFactor / 60.0)
@@ -59,7 +65,7 @@ class DifferentialModule:
         return self._drivingEncoder.getVelocity()
 
     def setVelocity(self, v: float) -> None:
-        self._drivingMotor.set(v)
+        self._drivingClosedLoop.setSetpoint(v, SparkLowLevel.ControlType.kVelocity)
 
     def setIdleMode(self, motorIdleMode: MotorIdleMode) -> None:
         idleMode = SparkBaseConfig.IdleMode.kCoast if motorIdleMode == MotorIdleMode.Coast else SparkBaseConfig.IdleMode.kBrake
@@ -71,11 +77,11 @@ class DifferentialModule:
     def reset(self) -> None:
         self._drivingEncoder.setPosition(0)
 
-    def _updateTelemetry(self) -> None:
+    def updateTelemetry(self) -> None:
+        self._velocity_publisher.set(self.getVelocity())
         # SmartDashboard.putNumber(f'{self._baseKey}/Driving/Speed/Target', self._drivingTargetSpeed)
         # SmartDashboard.putNumber(f'{self._baseKey}/Driving/Speed/Actual', self._drivingEncoder.getVelocity())
         # SmartDashboard.putNumber(f'{self._baseKey}/Driving/Position', self._drivingEncoder.getPosition())
-        pass
 
 
 class DifferentialControllerCommand(Command):
@@ -138,7 +144,7 @@ class DifferentialControllerCommand(Command):
             self._desiredRotation = desiredRotation
 
         self._timer = Timer()
-        self.addRequirements(*requirements)
+        self.addRequirements(requirements)
 
     def initialize(self):
         self._timer.restart()

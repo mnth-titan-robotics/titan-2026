@@ -78,6 +78,10 @@ class Subsystems:
 
         kMaxSpeedMetersPerSecond: float = 12
         kMaxAngularSpeed: float = 2.0 * math.pi
+        kMaxAcceleration: float = 1.0  # meters per second squared
+
+        TranslationPID = PID(P=1.5, I=0.0, D=0.1)
+        RotationPID = PID(P=1.0, I=0.0, D=0.1)
 
         # Chassis configuration
         # Distance between centers of right and left wheels on robot

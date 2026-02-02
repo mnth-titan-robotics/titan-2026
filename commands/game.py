@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, Callable
 
 from commands2 import Command
 from wpimath.controller import HolonomicDriveController, PIDController, ProfiledPIDControllerRadians
-from wpimath.geometry import Pose2d
+from wpimath.geometry import Pose2d, Rotation2d
 from wpimath.trajectory import Trajectory, TrapezoidProfileRadians
 
 import constants
@@ -16,6 +16,7 @@ if TYPE_CHECKING:
 class Game:
     def __init__(self, robot: "RobotContainer"):
         self._robot = robot
+        self._localization = robot._localization
 
     # TODO: Add any composite commands (anything that involves multiple steps or multiple subsystems) here
     # This is an example from The Lady Cans (FRC 2881):
@@ -36,27 +37,31 @@ class Game:
 
     def followTrajectoryCommand(
             self,
-            get_pose: Callable[[], Pose2d],
             trajectory: Trajectory) -> Command:
         """Returns a command that drives the robot along the provided trajectory"""
+        def get_pose() -> Pose2d:
+            pose3d = self._localization.get_pose()
+            rot2d = Rotation2d(pose3d.rotation().Z())
+            return Pose2d(pose3d.X(), pose3d.Y(), rot2d)
+
         DriveConstants = constants.Subsystems.Drive
         driveSubsystem = self._robot._drive
 
         x_controller = PIDController(
-            P=DriveConstants.TranslationPID.P,
-            I=DriveConstants.TranslationPID.I,
-            D=DriveConstants.TranslationPID.D)
+            Kp=DriveConstants.TranslationPID.P,
+            Ki=DriveConstants.TranslationPID.I,
+            Kd=DriveConstants.TranslationPID.D)
         y_controller = PIDController(
-            P=DriveConstants.TranslationPID.P,
-            I=DriveConstants.TranslationPID.I,
-            D=DriveConstants.TranslationPID.D)
+            Kp=DriveConstants.TranslationPID.P + 0.2,
+            Ki=DriveConstants.TranslationPID.I,
+            Kd=DriveConstants.TranslationPID.D)
         theta_controller = ProfiledPIDControllerRadians(
             Kp=DriveConstants.RotationPID.P,
             Ki=DriveConstants.RotationPID.I,
             Kd=DriveConstants.RotationPID.D,
             constraints=TrapezoidProfileRadians.Constraints(
-                maxVelocity=DriveConstants.MaxVelocity,
-                maxAcceleration=DriveConstants.MaxAcceleration
+                maxVelocity=DriveConstants.kMaxSpeedMetersPerSecond,
+                maxAcceleration=DriveConstants.kMaxAcceleration
             )
         )
         # Allow the controller to wrap around. -180 degrees and 180 degrees (-math.pi and math.pi radians)
@@ -70,8 +75,8 @@ class Game:
         return DifferentialControllerCommand(
             trajectory=trajectory,
             pose=get_pose,
-            kinematics=DriveConstants.Kinematics,
+            kinematics=DriveConstants.Mecanum.kDriveKinematics,
             controller=drive_controller,
-            outputModuleStates=driveSubsystem.setWheelSpeeds,
+            outputModuleStates=driveSubsystem._set_wheel_speeds,
             requirements=(driveSubsystem)
         )

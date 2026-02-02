@@ -18,7 +18,7 @@ import ntcore
 from wpimath.geometry import Pose3d, Translation3d, Rotation3d, Quaternion
 
 # Import generated protobuf classes
-from generated import commands_pb2, geometry3d_pb2, data_pb2
+from .generated import commands_pb2, geometry3d_pb2, data_pb2
 
 
 class QuestNav:
