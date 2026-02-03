@@ -9,12 +9,20 @@ from wpimath.trajectory import Trajectory, TrapezoidProfileRadians, TrajectoryGe
 from wpimath.geometry import Pose2d, Rotation2d, Translation2d
 from commands.game import Game
 from pathplannerlib.auto import AutoBuilder, DriveFeedforwards
+from pathplannerlib.controller import PPLTVController
+from wpilib import DriverStation
 from pathplannerlib.path import PathPlannerPath
 import math
+import constants
 
 if TYPE_CHECKING:
     from robotcontainer import RobotContainer
 
+def shouldFlipPath():
+        # Boolean supplier that controls when the path will be mirrored for the red alliance
+        # This will flip the path being followed to the red side of the field.
+        # THE ORIGIN WILL REMAIN ON THE BLUE SIDE
+        return DriverStation.getAlliance() == DriverStation.Alliance.kRed
 
 class Auto:
     def __init__(
@@ -28,35 +36,26 @@ class Auto:
         self._selectedAuto = cmd.none()
 
         def output(chassisSpeeds: ChassisSpeeds, driveFeedForward: DriveFeedforwards) -> None:
-            # TODO: Implement this function
-            pass
+            self._robot._drive._set_chassis_speeds(chassisSpeeds)
 
-        # TODO: Implement - see https://pathplanner.dev/pplib-getting-started.html#configure-autobuilder
         AutoBuilder.configure(
             self._robot._localization.get_pose2d,
             self._robot._localization.set_pose2d,
             self._robot._drive._get_chassis_speeds,
             output,
-            None, # TODO: Create PathFollowingController
-            None, # TODO: Create RobotConfig
-            lambda: False, # TODO: Implement should_flip_path
+            PPLTVController(0.02),
+            constants.Subsystems.Drive.PathPlannerConfig,
+            shouldFlipPath,
             self._robot._drive
         )
 
         # Add Robot/Auto to SmartDashboard with options
-        # TODO: Allow choosing any PathPlanner file - see https://pathplanner.dev/pplib-build-an-auto.html#create-a-sendablechooser-with-all-autos-in-project
-        self._autos = SendableChooser()
         # Default 'None' auto, does nothing. The second parameter is a function that will be called in our onChange callback below
-        self._autos.setDefaultOption("None", cmd.none)
-        self._autos.addOption("[Center]", self.auto_center)
-        self._autos.addOption("[Test]", self.auto_test)
-        # When the selected auto changes call the function (eg: cmd.none(), self.auto_center()) to get the command, then store it in self._auto
-        self._autos.onChange(lambda auto: self.set(auto()))
-        # Send the list of options to SmartDashboard
-        SmartDashboard.putData("Robot/Auto", self._autos)
+        self.autoChooser = AutoBuilder.buildAutoChooser()
+        SmartDashboard.putData("Robot/Auto", self.autoChooser)
 
-    def get(self) -> Command:
-        return self._selectedAuto
+    def get(self):
+        return self.autoChooser.getSelected()
 
     def set(self, autoCmd: Command) -> None:
         self._selectedAuto = autoCmd
