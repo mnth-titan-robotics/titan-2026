@@ -1,13 +1,15 @@
 ﻿from typing import TYPE_CHECKING
 
 from commands2 import Command, cmd
+
 from wpilib import SendableChooser, SmartDashboard
 from wpimath import units
 from wpimath.kinematics import ChassisSpeeds
 from wpimath.trajectory import Trajectory, TrapezoidProfileRadians, TrajectoryGenerator, TrajectoryConfig
 from wpimath.geometry import Pose2d, Rotation2d, Translation2d
 from commands.game import Game
-
+from pathplannerlib.auto import AutoBuilder, DriveFeedforwards
+from pathplannerlib.path import PathPlannerPath
 import math
 
 if TYPE_CHECKING:
@@ -25,7 +27,24 @@ class Auto:
 
         self._selectedAuto = cmd.none()
 
+        def output(chassisSpeeds: ChassisSpeeds, driveFeedForward: DriveFeedforwards) -> None:
+            # TODO: Implement this function
+            pass
+
+        # TODO: Implement - see https://pathplanner.dev/pplib-getting-started.html#configure-autobuilder
+        AutoBuilder.configure(
+            self._robot._localization.get_pose2d,
+            self._robot._localization.set_pose2d,
+            self._robot._drive._get_chassis_speeds,
+            output,
+            None, # TODO: Create PathFollowingController
+            None, # TODO: Create RobotConfig
+            lambda: False, # TODO: Implement should_flip_path
+            self._robot._drive
+        )
+
         # Add Robot/Auto to SmartDashboard with options
+        # TODO: Allow choosing any PathPlanner file - see https://pathplanner.dev/pplib-build-an-auto.html#create-a-sendablechooser-with-all-autos-in-project
         self._autos = SendableChooser()
         # Default 'None' auto, does nothing. The second parameter is a function that will be called in our onChange callback below
         self._autos.setDefaultOption("None", cmd.none)
@@ -35,9 +54,6 @@ class Auto:
         self._autos.onChange(lambda auto: self.set(auto()))
         # Send the list of options to SmartDashboard
         SmartDashboard.putData("Robot/Auto", self._autos)
-
-
-        
 
     def get(self) -> Command:
         return self._selectedAuto

@@ -126,13 +126,13 @@ class Drive(Subsystem):
             get_input: Callable[[], ChassisSpeeds]) -> Command:
         """Returns a command that drives the robot"""
         return self.run(
-            lambda: self._set_chassis_speed(get_input())
+            lambda: self._set_chassis_speeds(get_input())
         ).withName("DriveSubsystem:Drive")
 
     def set_x_command(self) -> Command:
         return cmd.none()
 
-    def _set_chassis_speed(self, chassisSpeeds: ChassisSpeeds) -> None:
+    def _set_chassis_speeds(self, chassisSpeeds: ChassisSpeeds) -> None:
         wheel_speeds = DriveConstants.kDriveKinematics.toWheelSpeeds(chassisSpeeds)
         self._set_wheel_speeds(wheel_speeds)
         # TODO: Implement field-centric driving

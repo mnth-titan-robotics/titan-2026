@@ -1,4 +1,4 @@
-﻿from wpimath.geometry import Pose3d, Transform3d, Translation3d, Rotation3d
+﻿from wpimath.geometry import Pose2d, Pose3d, Transform3d, Translation3d, Rotation3d
 from wpimath.kinematics import ChassisSpeeds
 from .questnav import QuestNav
 from lib import utils
@@ -39,6 +39,8 @@ class Localization:
         if len(pose_frames) > 1:
             prev_frame = pose_frames[-2]
             self._prev_frame = pose_frame
+        elif prev_frame is None:
+            return
 
         # Compute the velocity between the two frames
         delta = self._pose - prev_frame.quest_pose_3d
@@ -54,6 +56,17 @@ class Localization:
 
     def get_pose(self) -> Pose3d:
         return self._pose
+
+    def get_pose2d(self) -> Pose2d:
+        return self._pose.toPose2d()
+
+    def reset_pose2d(self, pose: Pose2d) -> None:
+        pose3d = Pose3d(
+            pose.translation().x,
+            pose.translation().y,
+            self._pose.z,
+            Rotation3d(0, 0, pose.rotation().radians()))
+        self._questnav.set_pose(pose3d - self._questnavToRobot)
 
     def get_velocity(self) -> ChassisSpeeds:
         return self._velocity
