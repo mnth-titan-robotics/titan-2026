@@ -1,7 +1,7 @@
 from wpimath import units
 import math
 
-from pathplannerlib.config import RobotConfig
+from pathplannerlib.config import RobotConfig, PIDConstants
 from wpimath import units
 from wpimath.geometry import Translation2d
 from wpimath.kinematics import SwerveDrive4Kinematics, MecanumDriveKinematics
@@ -24,6 +24,9 @@ class NeoMotorConstants:
 class Subsystems:
     class Drive:
         PathPlannerConfig = RobotConfig.fromGUISettings()
+        kPathPlannerTranslationConstants = PIDConstants(2.0, 0.0, 0.1)
+        kPathPlannerRotationConstants = PIDConstants(2.0, 0.0, 0.1)
+
         class Mecanum:
             kDriftCorrectionConstants = DriftCorrectionConstants(
                 rotationPID=PID(0.01, 0, 0),

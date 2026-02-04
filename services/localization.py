@@ -66,7 +66,7 @@ class Localization:
             pose.translation().y,
             self._pose.z,
             Rotation3d(0, 0, pose.rotation().radians()))
-        self._questnav.set_pose(pose3d - self._questnavToRobot)
+        self._questnav.set_pose(pose3d + self._questnavToRobot.inverse())
 
     def get_velocity(self) -> ChassisSpeeds:
         return self._velocity

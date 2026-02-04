@@ -115,9 +115,6 @@ class Drive(Subsystem):
             dx = units.meters_per_second(get_x() * DriveConstants.kMaxSpeedMetersPerSecond)
             dy = units.meters_per_second(get_y() * DriveConstants.kMaxSpeedMetersPerSecond)
             domega = units.degrees_per_second(get_omega() * DriveConstants.kMaxAngularSpeed)
-            self._dx_publisher.set(dx)
-            self._dy_publisher.set(dy)
-            self._domega_publisher.set(domega)
             return ChassisSpeeds(dx, dy, domega)
         return self.drive_command(speeds_callback)
 
@@ -133,6 +130,9 @@ class Drive(Subsystem):
         return cmd.none()
 
     def _set_chassis_speeds(self, chassisSpeeds: ChassisSpeeds) -> None:
+        self._dx_publisher.set(chassisSpeeds.vx)
+        self._dy_publisher.set(chassisSpeeds.vy)
+        self._domega_publisher.set(chassisSpeeds.omega)
         wheel_speeds = DriveConstants.kDriveKinematics.toWheelSpeeds(chassisSpeeds)
         self._set_wheel_speeds(wheel_speeds)
         # TODO: Implement field-centric driving

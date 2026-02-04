@@ -9,7 +9,7 @@ from wpimath.trajectory import Trajectory, TrapezoidProfileRadians, TrajectoryGe
 from wpimath.geometry import Pose2d, Rotation2d, Translation2d
 from commands.game import Game
 from pathplannerlib.auto import AutoBuilder, DriveFeedforwards
-from pathplannerlib.controller import PPLTVController
+from pathplannerlib.controller import PPHolonomicDriveController
 from wpilib import DriverStation
 from pathplannerlib.path import PathPlannerPath
 import math
@@ -34,17 +34,18 @@ class Auto:
         self._game = game
 
         self._selectedAuto = cmd.none()
+        DriveConstants = constants.Subsystems.Drive
 
         def output(chassisSpeeds: ChassisSpeeds, driveFeedForward: DriveFeedforwards) -> None:
             self._robot._drive._set_chassis_speeds(chassisSpeeds)
 
         AutoBuilder.configure(
             self._robot._localization.get_pose2d,
-            self._robot._localization.set_pose2d,
+            self._robot._localization.reset_pose2d,
             self._robot._drive._get_chassis_speeds,
             output,
-            PPLTVController(0.02),
-            constants.Subsystems.Drive.PathPlannerConfig,
+            PPHolonomicDriveController(DriveConstants.kPathPlannerTranslationConstants, DriveConstants.kPathPlannerRotationConstants),
+            DriveConstants.PathPlannerConfig,
             shouldFlipPath,
             self._robot._drive
         )
