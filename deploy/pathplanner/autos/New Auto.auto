@@ -27,6 +27,24 @@
           "data": {
             "pathName": "DE_S2"
           }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "S2_T"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "climbtower"
+          }
+        },
+        {
+          "type": "parallel",
+          "data": {
+            "commands": []
+          }
         }
       ]
     }

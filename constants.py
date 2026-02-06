@@ -24,8 +24,8 @@ class NeoMotorConstants:
 class Subsystems:
     class Drive:
         PathPlannerConfig = RobotConfig.fromGUISettings()
-        kPathPlannerTranslationConstants = PIDConstants(2.0, 0.0, 0.1)
-        kPathPlannerRotationConstants = PIDConstants(2.0, 0.0, 0.1)
+        kPathPlannerTranslationConstants = PIDConstants(4.0, 0.0, 0.1)
+        kPathPlannerRotationConstants = PIDConstants(3.0, 0.0, 0.1)
 
         class Mecanum:
             kDriftCorrectionConstants = DriftCorrectionConstants(
@@ -33,10 +33,14 @@ class Subsystems:
                 rotationTolerance=Tolerance(0.5, 1.0)
             )
 
-            kMaxSpeedMetersPerSecond: float = 12
+            kMaxSpeedMetersPerSecond: units.meters_per_second = units.meters_per_second(12.0)
+            kMaxAcceleration: units.meters_per_second_squared = units.meters_per_second_squared(3.0)
             kMaxAngularSpeed: float = 2.0 * math.pi
             kTrackWidth: units.meters = units.inchesToMeters(23)
             kWheelBase: units.meters = units.inchesToMeters(27.5)
+                
+            TranslationPID = PID(P=1.5, I=0.0, D=0.1)
+            RotationPID = PID(P=1.0, I=0.0, D=0.1)
 
             kTranslationSpeedMax: units.meters_per_second = 4.8
             kRotationSpeedMax: units.radians_per_second = 2 * math.pi  # type: ignore

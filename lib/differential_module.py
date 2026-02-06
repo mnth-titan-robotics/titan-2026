@@ -39,8 +39,8 @@ class DifferentialModule:
          .secondaryCurrentLimit(self._config.constants.drivingMotorCurrentLimit)
          .inverted(self._config.isInverted)
          .voltageCompensation(11.0))
-        self._drivingMotorConfig.closedLoop.pidf(0.1, 0.0, 0.01, 0.1)
-        self._drivingMotorConfig.closedLoop.velocityFF(0.1)
+        self._drivingMotorConfig.closedLoop.pidf(0.1, 0.0, 0.01, 0.15)
+        self._drivingMotorConfig.closedLoop.velocityFF(0.15)
         (self._drivingMotorConfig.encoder
          .positionConversionFactor(drivingEncoderPositionConversionFactor)
          .velocityConversionFactor(drivingEncoderPositionConversionFactor / 60.0)
