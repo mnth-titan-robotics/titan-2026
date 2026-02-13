@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 class Game:
     def __init__(self, robot: "RobotContainer"):
         self._robot = robot
-        self._localization = robot._localization
+        self._localization = robot.localization
 
     # TODO: Add any composite commands (anything that involves multiple steps or multiple subsystems) here
     # This is an example from The Lady Cans (FRC 2881):
@@ -45,7 +45,7 @@ class Game:
             return Pose2d(pose3d.X(), pose3d.Y(), rot2d)
 
         DriveConstants = constants.Subsystems.Drive
-        driveSubsystem = self._robot._drive
+        driveSubsystem = self._robot.drive
 
         x_controller = PIDController(
             Kp=DriveConstants.TranslationPID.P,

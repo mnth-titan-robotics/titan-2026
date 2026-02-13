@@ -9,11 +9,13 @@ from typing import Callable
 from commands2 import Subsystem, Command, cmd
 from ntcore import NetworkTableInstance
 from wpilib import ADIS16470_IMU
-from wpimath.geometry import Rotation2d, Pose2d
+from wpimath.geometry import Rotation2d, Pose2d, Pose3d
 from wpimath.kinematics import ChassisSpeeds, SwerveModuleState, SwerveDrive4Odometry, SwerveDrive4Kinematics
 
+from wpimath.trajectory import Trajectory
 import constants
 from services import Tracker
+from services.localization import Localization
 from .max_swerve_module import MAXSwerveModule
 
 IMUAxis = ADIS16470_IMU.IMUAxis
@@ -21,7 +23,8 @@ DriveConstants = constants.Subsystems.Drive
 
 
 class Drive(Subsystem):
-    def __init__(self, tracker: Tracker):
+    def __init__(self, localization: Localization, tracker: Tracker):
+        self._localization = localization
         self._tracker = tracker
         # Create MAXSwerveModules
         self._frontLeft = MAXSwerveModule(
@@ -50,7 +53,8 @@ class Drive(Subsystem):
 
         networkTable = NetworkTableInstance.getDefault()
 
-        self._desiredStatePublisher = networkTable.getStructArrayTopic("Swerve/Modules/DesiredStates", SwerveModuleState).publish()
+        self._desiredStatePublisher = networkTable.getStructArrayTopic(
+            "Swerve/Modules/DesiredStates", SwerveModuleState).publish()
         self._statePublisher = networkTable.getStructArrayTopic("Swerve/Modules/States", SwerveModuleState).publish()
         self._pose_publisher = networkTable.getStructTopic("Swerve/Pose", Pose2d).publish()
         self._anglePublisher = networkTable.getStructTopic("Swerve/Angle", Rotation2d).publish()
@@ -139,12 +143,18 @@ class Drive(Subsystem):
             get_input: Callable[[], ChassisSpeeds]) -> Command:
         """Returns a command that drives the robot"""
         return self.run(
-            lambda: self._set_chassis_speed(get_input())
+            lambda: self.set_chassis_speeds(get_input())
         )
 
-    def _set_chassis_speed(self, chassisSpeeds: ChassisSpeeds) -> None:
+    def get_chassis_speeds(self) -> ChassisSpeeds:
+        return DriveConstants.kDriveKinematics.toChassisSpeeds(self._get_module_states())  # type: ignore
+
+    def set_chassis_speeds(self, chassisSpeeds: ChassisSpeeds) -> None:
         swerveModuleStates = DriveConstants.kDriveKinematics.toSwerveModuleStates(chassisSpeeds)
         self._set_module_states(swerveModuleStates)
+
+    def follow_trajectory_command(self, trajectory: Trajectory) -> Command:
+        return cmd.none()
 
     def set_x_command(self) -> Command:
         """
@@ -157,12 +167,23 @@ class Drive(Subsystem):
         # self._rearRight.setDesiredState((0, Rotation2d.fromDegrees(45)))
         return cmd.none()
 
+    def alignToTargetPose(self, getRobotPose: Callable[[], Pose2d], getTargetPose: Callable[[], Pose3d]) -> Command:
+        return cmd.none()
+
+    def _get_module_states(self) -> tuple[SwerveModuleState, ...]:
+        return [
+            self._frontLeft.getState(),
+            self._frontRight.getState(),
+            self._rearLeft.getState(),
+            self._rearRight.getState()]  # type: ignore
+
     def _set_module_states(self, desiredStates: tuple[SwerveModuleState, ...]) -> None:
         """
         Sets the swerve ModuleStates.
         :param desiredStates: The desired SwerveModule states.
         """
-        SwerveDrive4Kinematics.desaturateWheelSpeeds(desiredStates, DriveConstants.kMaxSpeedMetersPerSecond)
+        SwerveDrive4Kinematics.desaturateWheelSpeeds(
+            desiredStates, DriveConstants.kMaxSpeedMetersPerSecond)  # type: ignore
         self._frontLeft.setDesiredState(desiredStates[0])
         self._frontRight.setDesiredState(desiredStates[1])
         self._rearLeft.setDesiredState(desiredStates[2])

@@ -43,16 +43,16 @@ class RobotContainer:
         self._initControllers()
         self._initCommands()
         self._initControllerBindings()
-        
+
     def _initServices(self):
-        self._localization = Localization()
-        self._tracker = Tracker(TrackerConstants(), self._localization.get_pose, self._localization.get_velocity)
+        self.localization = Localization()
+        self.tracker = Tracker(TrackerConstants(), self.localization.get_pose2d, self.localization.get_velocity)
 
     def _initSubsystems(self):
         """Initializes subsystems. Should only be called from __init__"""
-        self._drive = Drive(self._tracker)
-        self._launcher = Launcher()
-        self._intake = Intake()
+        self.drive = Drive(self.localization, self.tracker)
+        self.launcher = Launcher()
+        self.intake = Intake()
 
     def _initControllers(self):
         self._driverController = commands2.button.CommandXboxController(
@@ -68,18 +68,18 @@ class RobotContainer:
         self.auto = Auto(self, self.game)
 
         # Set default commands for all subsystems
-        self._drive.setDefaultCommand(
-            self._drive.drive_joystick_command(
+        self.drive.setDefaultCommand(
+            self.drive.drive_joystick_command(
                 lambda: -utils.apply_deadband(self._driverController.getLeftY()) ** 3,
                 lambda: -utils.apply_deadband(self._driverController.getLeftX()) ** 3,
-                lambda: -utils.apply_deadband(self._driverController.getRightX())** 3
+                lambda: -utils.apply_deadband(self._driverController.getRightX()) ** 3
             )
         )
-        self._launcher.setDefaultCommand(
-            self._launcher.stop()
+        self.launcher.setDefaultCommand(
+            self.launcher.stop()
         )
-        self._intake.setDefaultCommand(
-            self._intake.stop()
+        self.intake.setDefaultCommand(
+            self.intake.stop()
         )
 
     def _initControllerBindings(self) -> None:
@@ -88,8 +88,8 @@ class RobotContainer:
         # Leaving unused, commented lines helps us keep track of what inputs aren't being used.
         # self.driver.rightStick().whileTrue(cmd.none())
         # self.driver.leftStick().whileTrue(cmd.none())
-        self._driverController.leftTrigger().whileTrue(self._intake.intake())
-        self._driverController.rightTrigger().whileTrue(self._launcher.start())
+        self._driverController.leftTrigger().whileTrue(self.intake.intake())
+        self._driverController.rightTrigger().whileTrue(self.launcher.start())
         # self.driver.rightBumper().whileTrue(cmd.none())
         # self.driver.leftBumper().whileTrue(cmd.none())
         # self.driver.povUp().whileTrue(cmd.none())
@@ -106,7 +106,7 @@ class RobotContainer:
 
     def getAutonomousCommand(self) -> commands2.Command:
         """Use this to pass the autonomous command to the main {Robot} class.
-    
+
         :returns: the command to run in autonomous
         """
         return self.auto.get()
