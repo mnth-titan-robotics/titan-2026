@@ -58,22 +58,22 @@ class Subsystems:
             kDifferentialModuleConfigs: tuple[DifferentialModuleConfig, ...] = (
                 DifferentialModuleConfig(
                     location=ModuleLocation.LeftFront,
-                    drivingMotorCANId=10,
+                    drivingMotorCANId=5,
                     isInverted=False,
                     constants=_differentialModuleConstants),
                 DifferentialModuleConfig(
                     location=ModuleLocation.LeftRear,
-                    drivingMotorCANId=11,
+                    drivingMotorCANId=3,
                     isInverted=False,
                     constants=_differentialModuleConstants),
                 DifferentialModuleConfig(
                     location=ModuleLocation.RightFront,
-                    drivingMotorCANId=12,
+                    drivingMotorCANId=7,
                     isInverted=True,
                     constants=_differentialModuleConstants),
                 DifferentialModuleConfig(
                     location=ModuleLocation.RightRear,
-                    drivingMotorCANId=13,
+                    drivingMotorCANId=1,
                     isInverted=True,
                     constants=_differentialModuleConstants)
             )
@@ -113,15 +113,15 @@ class Subsystems:
         kRearRightChassisAngularOffset = math.pi / 2
 
         # SPARK MAX CAN IDs
-        kFrontLeftDrivingCanId: int = 11
-        kRearLeftDrivingCanId: int = 15
-        kFrontRightDrivingCanId: int = 13
-        kRearRightDrivingCanId: int = 17
+        kFrontLeftDrivingCanId: int = 5
+        kRearLeftDrivingCanId: int = 3
+        kFrontRightDrivingCanId: int = 7
+        kRearRightDrivingCanId: int = 1
 
-        kFrontLeftTurningCanId: int = 12
-        kRearLeftTurningCanId: int = 16
-        kFrontRightTurningCanId: int = 14
-        kRearRightTurningCanId: int = 18
+        kFrontLeftTurningCanId: int = 6
+        kRearLeftTurningCanId: int = 4
+        kFrontRightTurningCanId: int = 8
+        kRearRightTurningCanId: int = 2
 
         kGyroReversed: bool = False
 
