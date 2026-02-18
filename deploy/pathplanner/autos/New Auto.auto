@@ -7,7 +7,19 @@
         {
           "type": "path",
           "data": {
-            "pathName": "New Path"
+            "pathName": "1_S1"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "S1_DE"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "DE_S1"
           }
         }
       ]

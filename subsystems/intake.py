@@ -3,11 +3,33 @@ from commands2 import Subsystem, Command
 
 import constants
 
+class IntakeExtender(Subsystem):
+    Constants = constants.Subsystems.IntakeExtender
+    def __init__(self):
+        self.motor = rev.SparkMax(self.Constants.MotorId,rev.SparkBase.MotorType.kBrushless)
+    
+    def extend(self) -> Command:
+        """Extends the intake mechanism."""
+
+        def command_function():
+            # Placeholder for extension logic
+            pass
+
+        return self.run(command_function).withName("IntakeExtend")
+
+    def retract(self) -> Command:
+        """Retracts the intake mechanism."""
+
+        def command_function():
+            # Placeholder for retraction logic
+            pass
+
+        return self.run(command_function).withName("IntakeRetract")
 
 class Intake(Subsystem):
     """Controls the intake mechanism for collecting game pieces."""
 
-    Constants = constants.Subsystems.Intake()
+    Constants = constants.Subsystems.Intake
 
     def __init__(self):
         # self._motor = rev.SparkMax(
@@ -44,20 +66,4 @@ class Intake(Subsystem):
 
         return self.run(command_function).withName("IntakeStop")
 
-    def extend(self) -> Command:
-        """Extends the intake mechanism."""
-
-        def command_function():
-            # Placeholder for extension logic
-            pass
-
-        return self.run(command_function).withName("IntakeExtend")
-
-    def retract(self) -> Command:
-        """Retracts the intake mechanism."""
-
-        def command_function():
-            # Placeholder for retraction logic
-            pass
-
-        return self.run(command_function).withName("IntakeRetract")
+    

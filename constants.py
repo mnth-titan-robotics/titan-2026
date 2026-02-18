@@ -135,6 +135,21 @@ class Subsystems:
         IntakeSpeed = 1.0
         ReverseSpeed = -0.5
 
+    class IntakeExtender:
+        MotorId = 2
+        MotorCurrentLimit = 25
+        MotorVComp = 10
+        IntakeSpeed = 1.0
+        ReverseSpeed = -0.5
+    
+    class Indexer:
+        MotorLow = 2
+        MotorHigh = 2
+        MotorCurrentLimit = 25
+        MotorVComp = 10
+        IntakeSpeed = 1.0
+        ReverseSpeed = -0.5
+
     class Climber:
         MotorId = 20
         MotorCurrentLimit = 30
