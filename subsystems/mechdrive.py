@@ -1,28 +1,44 @@
+from enum import Enum, auto
 from typing import Callable
 
 from commands2 import Subsystem, Command, cmd
 from ntcore import NetworkTableInstance
 from wpilib import ADIS16470_IMU
 from wpilib import SendableChooser
-from wpilib.drive import MecanumDrive
+from wpimath import units
 from wpimath.controller import PIDController
 from wpimath.filter import SlewRateLimiter
-from wpimath.geometry import Rotation2d, Pose2d
-from wpimath.kinematics import ChassisSpeeds, MecanumDriveWheelSpeeds, MecanumDriveWheelPositions
-from wpimath.kinematics import MecanumDriveOdometry
+from wpimath.geometry import Rotation2d, Pose2d, Pose3d
+from wpimath.kinematics import ChassisSpeeds, MecanumDriveWheelSpeeds, MecanumDriveWheelPositions, MecanumDriveOdometry
+from wpimath.controller import HolonomicDriveController, ProfiledPIDControllerRadians
+from wpimath.trajectory import Trajectory, TrapezoidProfileRadians
 
+import math
 import constants
 from lib.classes import MotorIdleMode, SpeedMode, DriveOrientation, OptionState
-from lib.differential_module import DifferentialModule
+from lib.differential_module import DifferentialModule, DifferentialControllerCommand
 from lib.enums import ModuleLocation
 from services import Tracker
-from wpimath import units
+from services.localization import Localization
+
 IMUAxis = ADIS16470_IMU.IMUAxis
 DriveConstants = constants.Subsystems.Drive.Mecanum
 
 
+class State(Enum):
+    Disabled = auto()
+    Enabled = auto()
+    Stopped = auto()
+    Running = auto()
+    Completed = auto()
+
+
 class Drive(Subsystem):
-    def __init__(self, tracker: Tracker):
+    _targetPose = Pose3d()
+    _targetPoseAlignmentState = State.Disabled
+
+    def __init__(self, localization: Localization, tracker: Tracker):
+        self._localization = localization
         self._tracker = tracker
         super().__init__()
 
@@ -37,14 +53,8 @@ class Drive(Subsystem):
 
         self._constants = DriveConstants
 
-        self._differentialModules = dict((c.location, DifferentialModule(c)) for c in self._constants.kDifferentialModuleConfigs)
-
-        # self._drivetrain = MecanumDrive(
-        #     self._differentialModules[ModuleLocation.LeftFront].getMotorController(),
-        #     self._differentialModules[ModuleLocation.LeftRear].getMotorController(),
-        #     self._differentialModules[ModuleLocation.RightFront].getMotorController(),
-        #     self._differentialModules[ModuleLocation.RightRear].getMotorController()
-        # )
+        self._differentialModules = dict((c.location, DifferentialModule(c))
+                                         for c in self._constants.kDifferentialModuleConfigs)
 
         self._isDriftCorrectionActive: bool = False
         self._driftCorrectionController = PIDController(*self._constants.kDriftCorrectionConstants.rotationPID)
@@ -86,6 +96,31 @@ class Drive(Subsystem):
             Rotation2d.fromDegrees(self._gyro.getAngle(IMUAxis.kZ)),
             self._get_module_positions()
         )
+        x_controller = PIDController(
+            Kp=DriveConstants.TranslationPID.P,
+            Ki=DriveConstants.TranslationPID.I,
+            Kd=DriveConstants.TranslationPID.D)
+        y_controller = PIDController(
+            Kp=DriveConstants.TranslationPID.P + 0.2,
+            Ki=DriveConstants.TranslationPID.I,
+            Kd=DriveConstants.TranslationPID.D)
+        theta_controller = ProfiledPIDControllerRadians(
+            Kp=DriveConstants.RotationPID.P,
+            Ki=DriveConstants.RotationPID.I,
+            Kd=DriveConstants.RotationPID.D,
+            constraints=TrapezoidProfileRadians.Constraints(
+                maxVelocity=DriveConstants.kMaxSpeedMetersPerSecond,
+                maxAcceleration=DriveConstants.kMaxSpeedMetersPerSecond
+            )
+        )
+        # Allow the controller to wrap around. -180 degrees and 180 degrees (-math.pi and math.pi radians)
+        # are the same.
+        theta_controller.enableContinuousInput(-math.pi, math.pi)
+        self._targetPoseAlignmentController = HolonomicDriveController(
+            xController=x_controller,
+            yController=y_controller,
+            thetaController=theta_controller
+        )
 
     def periodic(self) -> None:
         self._update_telemetry()
@@ -123,13 +158,81 @@ class Drive(Subsystem):
             get_input: Callable[[], ChassisSpeeds]) -> Command:
         """Returns a command that drives the robot"""
         return self.run(
-            lambda: self._set_chassis_speeds(get_input())
+            lambda: self.set_chassis_speeds(get_input())
         ).withName("DriveSubsystem:Drive")
+
+    def follow_trajectory_command(
+            self,
+            trajectory: Trajectory) -> Command:
+        def get_pose() -> Pose2d:
+            pose3d = self._localization.get_pose()
+            rot2d = Rotation2d(pose3d.rotation().Z())
+            return Pose2d(pose3d.X(), pose3d.Y(), rot2d)
+        x_controller = PIDController(
+            Kp=DriveConstants.TranslationPID.P,
+            Ki=DriveConstants.TranslationPID.I,
+            Kd=DriveConstants.TranslationPID.D)
+        y_controller = PIDController(
+            Kp=DriveConstants.TranslationPID.P + 0.2,
+            Ki=DriveConstants.TranslationPID.I,
+            Kd=DriveConstants.TranslationPID.D)
+        theta_controller = ProfiledPIDControllerRadians(
+            Kp=DriveConstants.RotationPID.P,
+            Ki=DriveConstants.RotationPID.I,
+            Kd=DriveConstants.RotationPID.D,
+            constraints=TrapezoidProfileRadians.Constraints(
+                maxVelocity=DriveConstants.kMaxSpeedMetersPerSecond,
+                maxAcceleration=DriveConstants.kMaxAcceleration
+            )
+        )
+        # Allow the controller to wrap around. -180 degrees and 180 degrees (-math.pi and math.pi radians)
+        # are the same.
+        theta_controller.enableContinuousInput(-math.pi, math.pi)
+        drive_controller = HolonomicDriveController(
+            xController=x_controller,
+            yController=y_controller,
+            thetaController=theta_controller
+        )
+        return DifferentialControllerCommand(
+            trajectory=trajectory,
+            pose=get_pose,
+            kinematics=self._constants.kDriveKinematics,
+            controller=drive_controller,
+            outputModuleStates=self._set_wheel_speeds,
+            requirements=tuple(self) # type: ignore
+        )
 
     def set_x_command(self) -> Command:
         return cmd.none()
 
-    def _set_chassis_speeds(self, chassisSpeeds: ChassisSpeeds) -> None:
+    def alignToTargetPose(self, getRobotPose: Callable[[], Pose2d], getTargetPose: Callable[[], Pose3d]) -> Command:
+        return self.startRun(
+            lambda: self._initTargetPoseAlignment(getTargetPose()),
+            lambda: self._runTargetPoseAlignment(getRobotPose())
+        ).until(
+            lambda: self._targetPoseAlignmentState == State.Completed
+        ).finallyDo(
+            lambda end: self._endTargetPoseAlignment()
+        )
+
+    def _initTargetPoseAlignment(self, targetPose: Pose3d) -> None:
+        self._targetPose = targetPose
+        self._targetPoseAlignmentState = State.Running
+
+    def _runTargetPoseAlignment(self, robotPose: Pose2d) -> None:
+        targetPose = self._targetPose or Pose3d()
+        self.set_chassis_speeds(self._targetPoseAlignmentController.calculate(
+            robotPose, targetPose.toPose2d(), 0, targetPose.toPose2d().rotation()))
+        if self._targetPoseAlignmentController.atReference():
+            self._targetPoseAlignmentState = State.Completed
+
+    def _endTargetPoseAlignment(self) -> None:
+        self.set_chassis_speeds(ChassisSpeeds())
+        if self._targetPoseAlignmentState != State.Completed:
+            self._targetPoseAlignmentState = State.Stopped
+            self._targetPose = None
+
+    def set_chassis_speeds(self, chassisSpeeds: ChassisSpeeds) -> None:
         self._dx_publisher.set(chassisSpeeds.vx)
         self._dy_publisher.set(chassisSpeeds.vy)
         self._domega_publisher.set(chassisSpeeds.omega)
@@ -157,7 +260,7 @@ class Drive(Subsystem):
         wheel_positions.rearRight = self._differentialModules[ModuleLocation.RightRear].getPosition()
 
         return wheel_positions
-    
+
     def _get_wheel_speeds(self) -> MecanumDriveWheelSpeeds:
         wheel_speeds = MecanumDriveWheelSpeeds()
         wheel_speeds.frontLeft = self._differentialModules[ModuleLocation.LeftFront].getVelocity()
@@ -166,7 +269,7 @@ class Drive(Subsystem):
         wheel_speeds.rearRight = self._differentialModules[ModuleLocation.RightRear].getVelocity()
         return wheel_speeds
 
-    def _get_chassis_speeds(self) -> ChassisSpeeds:
+    def get_chassis_speeds(self) -> ChassisSpeeds:
         return self._constants.kDriveKinematics.toChassisSpeeds(self._get_wheel_speeds())
 
     def _set_idle_mode(self, idleMode: MotorIdleMode) -> None:

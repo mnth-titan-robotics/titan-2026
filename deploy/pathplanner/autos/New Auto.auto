@@ -19,7 +19,31 @@
         {
           "type": "path",
           "data": {
-            "pathName": "DE_S1"
+            "pathName": "DE_Pickup"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "DE_S2"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "S2_T"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "climbtower"
+          }
+        },
+        {
+          "type": "parallel",
+          "data": {
+            "commands": []
           }
         }
       ]

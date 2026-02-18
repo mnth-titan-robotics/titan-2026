@@ -2,27 +2,26 @@
 
 from commands2 import Command, cmd
 
-from wpilib import SendableChooser, SmartDashboard
+from wpilib import DriverStation, SmartDashboard
 from wpimath import units
 from wpimath.kinematics import ChassisSpeeds
-from wpimath.trajectory import Trajectory, TrapezoidProfileRadians, TrajectoryGenerator, TrajectoryConfig
+from wpimath.trajectory import TrajectoryGenerator, TrajectoryConfig
 from wpimath.geometry import Pose2d, Rotation2d, Translation2d
 from commands.game import Game
 from pathplannerlib.auto import AutoBuilder, DriveFeedforwards
 from pathplannerlib.controller import PPHolonomicDriveController
-from wpilib import DriverStation
-from pathplannerlib.path import PathPlannerPath
-import math
 import constants
 
 if TYPE_CHECKING:
     from robotcontainer import RobotContainer
 
+
 def shouldFlipPath():
-        # Boolean supplier that controls when the path will be mirrored for the red alliance
-        # This will flip the path being followed to the red side of the field.
-        # THE ORIGIN WILL REMAIN ON THE BLUE SIDE
-        return DriverStation.getAlliance() == DriverStation.Alliance.kRed
+    # Boolean supplier that controls when the path will be mirrored for the red alliance
+    # This will flip the path being followed to the red side of the field.
+    # THE ORIGIN WILL REMAIN ON THE BLUE SIDE
+    return DriverStation.getAlliance() == DriverStation.Alliance.kRed
+
 
 class Auto:
     def __init__(
@@ -37,21 +36,23 @@ class Auto:
         DriveConstants = constants.Subsystems.Drive
 
         def output(chassisSpeeds: ChassisSpeeds, driveFeedForward: DriveFeedforwards) -> None:
-            self._robot._drive._set_chassis_speeds(chassisSpeeds)
+            self._robot.drive.set_chassis_speeds(chassisSpeeds)
 
         AutoBuilder.configure(
-            self._robot._localization.get_pose2d,
-            self._robot._localization.reset_pose2d,
-            self._robot._drive._get_chassis_speeds,
+            self._robot.localization.get_pose2d,
+            self._robot.localization.reset_pose2d,
+            self._robot.drive.get_chassis_speeds,
             output,
-            PPHolonomicDriveController(DriveConstants.kPathPlannerTranslationConstants, DriveConstants.kPathPlannerRotationConstants),
+            PPHolonomicDriveController(DriveConstants.kPathPlannerTranslationConstants,
+                                       DriveConstants.kPathPlannerRotationConstants),
             DriveConstants.PathPlannerConfig,
             shouldFlipPath,
-            self._robot._drive
+            self._robot.drive
         )
 
         # Add Robot/Auto to SmartDashboard with options
-        # Default 'None' auto, does nothing. The second parameter is a function that will be called in our onChange callback below
+        # Default 'None' auto, does nothing. The second parameter is a function that will be called in our onChange
+        # callback below
         self.autoChooser = AutoBuilder.buildAutoChooser()
         SmartDashboard.putData("Robot/Auto", self.autoChooser)
 
@@ -63,16 +64,16 @@ class Auto:
 
     def auto_center(self) -> Command:
         # Move forward at 25% speed for 3.25s, then stop
-        drive = self._robot._drive
+        drive = self._robot.drive
         speeds = ChassisSpeeds(vx=0.25)
         return cmd.sequence(
-            drive.drive_command(speeds).withTimeout(3.25),
-            drive.stopCommand().withTimeout(0.1)
+            drive.drive_command(lambda: speeds).withTimeout(3.25),
+            drive.drive_command(ChassisSpeeds).withTimeout(0.1)
         )
-    
+
     def auto_test(self) -> Command:
         # A simple test auto that spins in place for 2 seconds
-        
+
         trajectory = TrajectoryGenerator.generateTrajectory(
             Pose2d(0, 0, Rotation2d(0)),
             [Translation2d(1, 0), Translation2d(0, 1), Translation2d(1.2, 1.2)],
@@ -82,7 +83,7 @@ class Auto:
                 units.meters_per_second_squared(1.5)
             )
         )
-        
+
         return self._game.followTrajectoryCommand(
             trajectory=trajectory
         )
