@@ -6,8 +6,8 @@ import constants
 class Indexer(Subsystem):
     Constants = constants.Subsystems.Indexer
     def __init__(self):
-        self.MotorHigh = rev.SparkMax(self.Constants.MotorHigh,rev.SparkBase.MotorType.kBrushless)
-        self.MotorLow = rev.SparkMax(self.Constants.MotorLow,rev.SparkBase.MotorType.kBrushless)
+        self.MotorHigh = rev.SparkMax(self.Constants.MotorHighId,rev.SparkBase.MotorType.kBrushless)
+        self.MotorLow = rev.SparkMax(self.Constants.MotorLowId,rev.SparkBase.MotorType.kBrushless)
    
     def stop(self) -> Command:
         """Stops all motors"""

@@ -126,29 +126,31 @@ class Subsystems:
         kGyroReversed: bool = False
 
     class Launcher:
-        MotorId = 6
         MotorCurrentLimit = 40
         MotorVComp = 12
         LaunchSpeed = -1.0
         IdleSpeed = 0.2
+        LeftMotorId = 10
+        RightMotorId = 11
+      
 
     class Intake:
-        MotorId = 2
+        MotorId = 12
         MotorCurrentLimit = 25
         MotorVComp = 10
         IntakeSpeed = 1.0
         ReverseSpeed = -0.5
 
     class IntakeExtender:
-        MotorId = 2
+        MotorId = 14
         MotorCurrentLimit = 25
         MotorVComp = 10
         IntakeSpeed = 1.0
         ReverseSpeed = -0.5
     
     class Indexer:
-        MotorLow = 2
-        MotorHigh = 2
+        MotorLowId = 16
+        MotorHighId = 18
         MotorCurrentLimit = 25
         MotorVComp = 10
         IntakeSpeed = 1.0

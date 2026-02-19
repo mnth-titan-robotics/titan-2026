@@ -10,22 +10,28 @@ class Launcher(Subsystem):
     Constants = constants.Subsystems.Launcher()
 
     def __init__(self):
-        # self._motor = rev.SparkMax(
-        #     self.Constants.MotorId,
-        #     rev.SparkBase.MotorType.kBrushed
-        # )
-        # self._motor.setCANTimeout(250)
-        # spark_config = rev.SparkMaxConfig()
-        # spark_config.inverted(True)
-        # self._motor.configure(spark_config, rev.ResetMode.kResetSafeParameters, rev.PersistMode.kPersistParameters)
-        pass
+        self._leftMotor = rev.SparkMax(
+            self.Constants.LeftMotorId,
+            rev.SparkBase.MotorType.kBrushless
+        )
+        self._rightMotor = rev.SparkMax(
+            self.Constants.RightMotorId,
+            rev.SparkBase.MotorType.kBrushless
+        )
+        self._leftMotor.setCANTimeout(250)
+        spark_config = rev.SparkMaxConfig()
+        spark_config.inverted(True)
+        spark_config.smartCurrentLimit(self.Constants.MotorCurrentLimit)
+        spark_config.voltageCompensation(self.Constants.MotorVComp)
+        self._leftMotor.configure(spark_config, rev.ResetMode.kResetSafeParameters, rev.PersistMode.kPersistParameters)
+        self._rightMotor.configure(spark_config, rev.ResetMode.kResetSafeParameters, rev.PersistMode.kPersistParameters)
+        spark_config.follow(self.Constants.LeftMotorId,True)
 
     def start(self) -> Command:
         """Starts the launcher at launch speed."""
 
         def command_function():
-            pass
-            # self._motor.set(self.Constants.LaunchSpeed)
+            self._leftMotor.set(self.Constants.LaunchSpeed)
 
         return self.run(command_function).withName("LauncherStart")
 
@@ -33,7 +39,6 @@ class Launcher(Subsystem):
         """Stops the launcher."""
 
         def command_function():
-            pass
-            # self._motor.set(0)
+            self._leftMotor.set(0)
 
         return self.run(command_function).withName("LauncherStop")

@@ -32,6 +32,7 @@ from robot import Robot
 from services.questnav.questnav_data import PoseFrame
 from services.questnav.questnav_stub import QuestNavStub
 from sim.mecanum_sim import MecanumSim
+from sim.swerve_drive_sim import SwerveDriveSim
 
 
 class QuestNavSim:
@@ -59,8 +60,8 @@ class PhysicsEngine:
         self._robot = robot
         self.physics_controller = physics_controller
         self._questNavSim = QuestNavSim(physics_controller, robot.container.localization._questnav)
-        # self._driveSim = SwerveDriveSim(robot.container._drive)
-        self._driveSim = MecanumSim(robot.container.drive)
+        self._driveSim = SwerveDriveSim(robot.container.drive)
+        # self._driveSim = MecanumSim(robot.container.drive)
         self._gyroSim = ADIS16470_IMUSim(robot.container.drive._gyro)
 
     def update_sim(self, now: float, tm_diff: float) -> None:
