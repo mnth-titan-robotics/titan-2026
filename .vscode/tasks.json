@@ -20,31 +20,36 @@
     {
       "label": "RobotPy Project: Install Prerequisites",
       "type": "shell",
-      "command": "python3 ./.vscode/scripts/install.py",
+      "args": ["./.vscode/scripts/install.py"],
+      "command": "${command:python.interpreterPath}",
       "problemMatcher": []
     },
     {
       "label": "RobotPy Project: Install/Update Libraries",
       "type": "shell",
-      "command": "python3 -m robotpy sync --use-certifi",
+      "command": "${command:python.interpreterPath}",
+      "args": ["-m", "robotpy", "sync", "--use-certifi"],
       "problemMatcher": []
     },
     {
       "label": "RobotPy Project: Test Robot Code",
       "type": "shell",
-      "command": "python3 -m robotpy test --isolated -- -v -s --exitfirst",
+      "command": "${command:python.interpreterPath}",
+      "args": ["-m", "robotpy", "test", "--isolated", "--", "-v", "-s", "--exitfirst"],
       "problemMatcher": []
     },
     {
       "label": "RobotPy Project: Simulate Robot Code",
       "type": "shell",
-      "command": "python3 -m robotpy sim",
+      "command": "${command:python.interpreterPath}",
+      "args": ["-m", "robotpy", "sim"],
       "problemMatcher": []
     },
     {
       "label": "RobotPy Project: Deploy Robot Code",
       "type": "shell",
-      "command": "python3 -m robotpy deploy --skip-tests --ignore-image-version",
+      "command": "${command:python.interpreterPath}",
+      "args": ["-m", "robotpy", "deploy", "--skip-tests", "--ignore-image-version"],
       "problemMatcher": []
     }
   ]
