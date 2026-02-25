@@ -153,7 +153,7 @@ class Subsystems:
         MotorHighId = 18
         MotorCurrentLimit = 25
         MotorVComp = 10
-        IntakeSpeed = 1.0
+        IndexerSpeed = 1.0
         ReverseSpeed = -0.5
 
     class Climber:

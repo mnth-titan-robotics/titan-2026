@@ -91,7 +91,7 @@ class RobotContainer:
         self._driverController.leftTrigger().whileTrue(self.intake.intake())
         self._driverController.rightTrigger().whileTrue(self.launcher.start())
         # self.driver.rightBumper().whileTrue(cmd.none())
-        # self.driver.leftBumper().whileTrue(cmd.none())
+        self._driverController.leftBumper().whileTrue(self.intake.reverse())
         # self.driver.povUp().whileTrue(cmd.none())
         # self.driver.povDown().whileTrue(cmd.none())
         # self.driver.povLeft().whileTrue(cmd.none())

@@ -1,6 +1,6 @@
 import rev
 from commands2 import Subsystem, Command
-
+import ntcore
 import constants
 
 
@@ -10,6 +10,8 @@ class Launcher(Subsystem):
     Constants = constants.Subsystems.Launcher()
 
     def __init__(self):
+        self.nt_instance = ntcore.NetworkTableInstance.getDefault()
+        self._speed_entry = self.nt_instance.getFloatTopic("Launcher/Speed").getEntry(self.Constants.LaunchSpeed)
         self._leftMotor = rev.SparkMax(
             self.Constants.LeftMotorId,
             rev.SparkBase.MotorType.kBrushless
@@ -31,7 +33,7 @@ class Launcher(Subsystem):
         """Starts the launcher at launch speed."""
 
         def command_function():
-            self._leftMotor.set(self.Constants.LaunchSpeed)
+            self._leftMotor.set(self._speed_entry.get())
 
         return self.run(command_function).withName("LauncherStart")
 
