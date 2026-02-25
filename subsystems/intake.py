@@ -1,5 +1,6 @@
 import rev
 from commands2 import Subsystem, Command
+import ntcore
 
 import constants
 
@@ -32,20 +33,20 @@ class Intake(Subsystem):
     Constants = constants.Subsystems.Intake
 
     def __init__(self):
-        # self._motor = rev.SparkMax(
-        #     self.Constants.MotorId,
-        #     rev.SparkBase.MotorType.kBrushed
-        # )
+        self.nt_instance = ntcore.NetworkTableInstance.getDefault()
+        self._speed_entry = self.nt_instance.getFloatTopic("Intake/Speed").getEntry(self.Constants.IntakeSpeed)
+        self._motor = rev.SparkMax(
+            self.Constants.MotorId,
+            rev.SparkBase.MotorType.kBrushed
+        )
         # self._motor.setCANTimeout(250)
         # spark_config = rev.SparkMaxConfig()
         # self._motor.configure(spark_config, rev.ResetMode.kResetSafeParameters, rev.PersistMode.kPersistParameters)
-        pass
 
     def intake(self) -> Command:
         """Starts the intake at intake speed."""
         def command_function():
-            # self._motor.set(self.Constants.IntakeSpeed)
-            pass
+            self._motor.set(self._speed_entry.get())
 
         return self.run(command_function).withName("IntakeStart")
 
