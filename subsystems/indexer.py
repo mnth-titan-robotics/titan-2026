@@ -8,7 +8,7 @@ class Indexer(Subsystem):
     def __init__(self):
         self.nt_instance = ntcore.NetworkTableInstance.getDefault()
         self._speed_entry = self.nt_instance.getFloatTopic("Indexer/Speed").getEntry(self.Constants.IndexerSpeed)
-        self._motor = rev.SparkMax(self.Constants.MotorHighId,rev.SparkBase.MotorType.kBrushless)
+        self._motor = rev.SparkMax(self.Constants.MotorId,rev.SparkBase.MotorType.kBrushless)
 
     def stop(self) -> Command:
         """Stops all motors"""

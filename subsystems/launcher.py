@@ -22,12 +22,12 @@ class Launcher(Subsystem):
         )
         self._leftMotor.setCANTimeout(250)
         spark_config = rev.SparkMaxConfig()
-        spark_config.inverted(True)
+        spark_config.inverted(False)
         spark_config.smartCurrentLimit(self.Constants.MotorCurrentLimit)
         spark_config.voltageCompensation(self.Constants.MotorVComp)
         self._leftMotor.configure(spark_config, rev.ResetMode.kResetSafeParameters, rev.PersistMode.kPersistParameters)
-        self._rightMotor.configure(spark_config, rev.ResetMode.kResetSafeParameters, rev.PersistMode.kPersistParameters)
         spark_config.follow(self.Constants.LeftMotorId,True)
+        self._rightMotor.configure(spark_config, rev.ResetMode.kResetSafeParameters, rev.PersistMode.kPersistParameters)
 
     def start(self) -> Command:
         """Starts the launcher at launch speed."""

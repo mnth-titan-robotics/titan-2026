@@ -130,34 +130,41 @@ class Subsystems:
         MotorVComp = 12
         LaunchSpeed = -1.0
         IdleSpeed = 0.2
-        LeftMotorId = 10
-        RightMotorId = 11
+        LeftMotorId = 20
+        RightMotorId = 21
       
 
     class Intake:
-        MotorId = 12
+        MotorId = 27
         MotorCurrentLimit = 25
         MotorVComp = 10
         IntakeSpeed = 1.0
         ReverseSpeed = -0.5
 
     class IntakeExtender:
-        MotorId = 14
+        LeftMotorId = 10
+        RightMotorId = 11
+        GearReduction = 4.0 * 3.0 * 4.0
         MotorCurrentLimit = 25
         MotorVComp = 10
-        IntakeSpeed = 1.0
+        MotorSpeed = 1.0
+        MaxAcceleration = 0.5
+        AllowedProfileError = 0.01
         ReverseSpeed = -0.5
+        ForwardLimit = 1.0
+        ReverseLimit = -1.0
+        PID = (0.1, 0.0, 0.01)
+        OutputRange = (0, 0.1)
     
     class Indexer:
-        MotorLowId = 16
-        MotorHighId = 18
+        MotorId = 16
         MotorCurrentLimit = 25
         MotorVComp = 10
         IndexerSpeed = 1.0
         ReverseSpeed = -0.5
 
     class Climber:
-        MotorId = 20
+        MotorId = 15
         MotorCurrentLimit = 30
         MotorVComp = 12
         ClimbSpeed = 1.0
