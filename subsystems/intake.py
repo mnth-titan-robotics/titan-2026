@@ -10,8 +10,10 @@ class IntakeExtender(Subsystem):
     
     def __init__(self):
         self.nt_instance = ntcore.NetworkTableInstance.getDefault()
-        self._reverse_limit_entry = self.nt_instance.getFloatTopic("IntakeExtender/ReverseLimit").getEntry(self.Constants.ReverseLimit)
-        self._forward_limit_entry = self.nt_instance.getFloatTopic("IntakeExtender/ForwardLimit").getEntry(self.Constants.ForwardLimit)
+        self._reverse_limit_entry = self.nt_instance.getFloatTopic("Subsystems/Intake/Extender_ReverseLimit").getEntry(self.Constants.ReverseLimit)
+        self._forward_limit_entry = self.nt_instance.getFloatTopic("Subsystems/Intake/Extender_ForwardLimit").getEntry(self.Constants.ForwardLimit)
+        self._reverse_limit_entry.setDefault(self.Constants.ReverseLimit)
+        self._forward_limit_entry.setDefault(self.Constants.ForwardLimit)
 
         self._leftMotor = rev.SparkMax(self.Constants.LeftMotorId,rev.SparkBase.MotorType.kBrushless)
         self._rightMotor = rev.SparkMax(self.Constants.RightMotorId,rev.SparkBase.MotorType.kBrushless)
@@ -37,21 +39,32 @@ class IntakeExtender(Subsystem):
         spark_config.follow(self.Constants.LeftMotorId,True)
         self._rightMotor.configure(spark_config, rev.ResetMode.kResetSafeParameters, rev.PersistMode.kPersistParameters)
     
+    def stop(self) -> Command:
+        self._targetPosition = self._forward_limit_entry.get()
+
+        def command_function():
+            # self._closedLoopController.setReference(self._targetPosition, rev.SparkBase.ControlType.kMAXMotionPositionControl)
+            self._leftMotor.set(0.0)
+
+        return self.run(command_function).withName("IntakeStop")
+    
     def extend(self) -> Command:
         """Extends the intake mechanism."""
         self._targetPosition = self._forward_limit_entry.get()
 
         def command_function():
-            self._closedLoopController.setReference(self._targetPosition, rev.SparkBase.ControlType.kMAXMotionPositionControl)
+            # self._closedLoopController.setReference(self._targetPosition, rev.SparkBase.ControlType.kMAXMotionPositionControl)
+            self._leftMotor.set(0.1)
 
-        return self.runOnce(command_function).withName("IntakeExtend")
+        return self.run(command_function).withName("IntakeExtend")
 
     def retract(self) -> Command:
         """Retracts the intake mechanism."""
         self._targetPosition = self._reverse_limit_entry.get()
 
         def command_function():
-            self._closedLoopController.setReference(self._targetPosition, rev.SparkBase.ControlType.kMAXMotionPositionControl)
+            # self._closedLoopController.setReference(self._targetPosition, rev.SparkBase.ControlType.kMAXMotionPositionControl)
+            self._leftMotor.set(-0.1)
 
         return self.run(command_function).withName("IntakeRetract")
 
@@ -62,7 +75,8 @@ class Intake(Subsystem):
 
     def __init__(self):
         self.nt_instance = ntcore.NetworkTableInstance.getDefault()
-        self._speed_entry = self.nt_instance.getFloatTopic("Intake/Speed").getEntry(self.Constants.IntakeSpeed)
+        self._speed_entry = self.nt_instance.getFloatTopic("Subsystems/Intake/Intake_Speed").getEntry(self.Constants.IntakeSpeed)
+        self._speed_entry.setDefault(self.Constants.IntakeSpeed)
         self._motor = rev.SparkMax(
             self.Constants.MotorId,
             rev.SparkBase.MotorType.kBrushed

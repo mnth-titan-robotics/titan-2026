@@ -7,7 +7,7 @@
 import enum
 import commands2
 import constants
-from subsystems import Drive, Launcher, Intake
+from subsystems import Drive, Launcher, Intake, IntakeExtender, Indexer
 from commands.auto import Auto
 from commands.game import Game
 from services import Tracker, TrackerConstants, Localization
@@ -52,7 +52,9 @@ class RobotContainer:
         """Initializes subsystems. Should only be called from __init__"""
         self.drive = Drive(self.localization, self.tracker)
         self.launcher = Launcher()
+        self.indexer = Indexer()
         self.intake = Intake()
+        self.intakeExtender = IntakeExtender()
 
     def _initControllers(self):
         self._driverController = commands2.button.CommandXboxController(
@@ -78,8 +80,14 @@ class RobotContainer:
         self.launcher.setDefaultCommand(
             self.launcher.stop()
         )
+        self.indexer.setDefaultCommand(
+            self.indexer.stop()
+        )
         self.intake.setDefaultCommand(
             self.intake.stop()
+        )
+        self.intakeExtender.setDefaultCommand(
+            self.intakeExtender.stop()
         )
 
     def _initControllerBindings(self) -> None:
@@ -92,11 +100,11 @@ class RobotContainer:
         self._driverController.rightTrigger().whileTrue(self.launcher.start())
         # self.driver.rightBumper().whileTrue(cmd.none())
         self._driverController.leftBumper().whileTrue(self.intake.reverse())
-        # self.driver.povUp().whileTrue(cmd.none())
-        # self.driver.povDown().whileTrue(cmd.none())
+        self._driverController.povUp().whileTrue(self.intakeExtender.extend())
+        self._driverController.povDown().whileTrue(self.intakeExtender.retract())
         # self.driver.povLeft().whileTrue(cmd.none())
         # self.driver.povRight().whileTrue(cmd.none())
-        # self.driver.a().whileTrue(cmd.none())
+        self._driverController.a().whileTrue(self.indexer.feed())
         # self.driver.b().whileTrue(cmd.none())
         # self.driver.y().whileTrue(cmd.none())
         # self.driver.x().whileTrue(cmd.none())

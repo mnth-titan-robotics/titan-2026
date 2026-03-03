@@ -11,7 +11,9 @@ class Launcher(Subsystem):
 
     def __init__(self):
         self.nt_instance = ntcore.NetworkTableInstance.getDefault()
-        self._speed_entry = self.nt_instance.getFloatTopic("Launcher/Speed").getEntry(self.Constants.LaunchSpeed)
+        self._speed_entry = self.nt_instance.getFloatTopic("Subsystems/Launcher/Launcher_Speed").getEntry(self.Constants.LaunchSpeed)
+        self._speed_entry.setDefault(self.Constants.LaunchSpeed)
+
         self._leftMotor = rev.SparkMax(
             self.Constants.LeftMotorId,
             rev.SparkBase.MotorType.kBrushless
