@@ -31,6 +31,8 @@ class Launcher(Subsystem):
         spark_config.follow(self.Constants.LeftMotorId,True)
         self._rightMotor.configure(spark_config, rev.ResetMode.kResetSafeParameters, rev.PersistMode.kPersistParameters)
 
+        self._encoder = self._leftMotor.getEncoder()
+
     def start(self) -> Command:
         """Starts the launcher at launch speed."""
 
@@ -46,3 +48,7 @@ class Launcher(Subsystem):
             self._leftMotor.set(0)
 
         return self.run(command_function).withName("LauncherStop")
+
+    def at_speed(self) -> bool:
+        """Returns True if the launcher is at launch speed."""
+        return abs(self._encoder.getVelocity()) >= self.Constants.MinLaunchSpeed

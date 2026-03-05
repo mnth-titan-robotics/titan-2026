@@ -8,7 +8,7 @@ from wpimath.kinematics import ChassisSpeeds
 from wpimath.trajectory import TrajectoryGenerator, TrajectoryConfig
 from wpimath.geometry import Pose2d, Rotation2d, Translation2d
 from commands.game import Game
-from pathplannerlib.auto import AutoBuilder, DriveFeedforwards
+from pathplannerlib.auto import AutoBuilder, DriveFeedforwards, NamedCommands
 from pathplannerlib.controller import PPHolonomicDriveController
 import constants
 
@@ -34,6 +34,10 @@ class Auto:
 
         self._selectedAuto = cmd.none()
         DriveConstants = constants.Subsystems.Drive
+        
+        NamedCommands.registerCommand('climbtower', cmd.none())
+        NamedCommands.registerCommand('startLauncher', self.auto_launch(units.seconds(15)))
+        NamedCommands.registerCommand('stopLauncher', self._robot.launcher.stop())
 
         def output(chassisSpeeds: ChassisSpeeds, driveFeedForward: DriveFeedforwards) -> None:
             self._robot.drive.set_chassis_speeds(chassisSpeeds)
@@ -87,3 +91,15 @@ class Auto:
         return self._game.followTrajectoryCommand(
             trajectory=trajectory
         )
+    
+    def _launch_when_ready(self) -> Command:
+        return self._robot.indexer.stop() \
+            .until(self._robot.launcher.at_speed) \
+            .andThen(self._robot.indexer.feed())
+
+    def auto_launch(self, duration: units.seconds) -> Command:
+        # Auto command that starts the launcher, waits until at speed, then launches for the specified duration
+        return cmd.parallel(
+            self._robot.launcher.start(),
+            self._launch_when_ready()
+        ).withTimeout(duration)

@@ -129,16 +129,18 @@ class Subsystems:
         MotorCurrentLimit = 40
         MotorVComp = 12
         LaunchSpeed = -1.0
-        IdleSpeed = 0.2
+        IdleSpeed = -0.2
         LeftMotorId = 20
         RightMotorId = 21
+        # Minimum speed in RPM required for the launcher to reliably fire projectiles
+        MinLaunchSpeed = 0.6
       
 
     class Intake:
         MotorId = 12
         MotorCurrentLimit = 25
         MotorVComp = 10
-        IntakeSpeed = 0.5
+        IntakeSpeed = 0.8
         ReverseSpeed = -0.5
 
     class IntakeExtender:
