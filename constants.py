@@ -149,15 +149,15 @@ class Subsystems:
         ReverseSpeed = -0.5
     
     class Indexer:
-        MotorLowId = 16
-        MotorHighId = 18
+        #MotorLowId = 16
+        MotorId = 20
         MotorCurrentLimit = 25
         MotorVComp = 10
         IndexerSpeed = 1.0
         ReverseSpeed = -0.5
 
     class Climber:
-        MotorId = 20
+        MotorId = 25
         MotorCurrentLimit = 30
         MotorVComp = 12
         ClimbSpeed = 1.0
