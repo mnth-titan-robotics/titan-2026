@@ -14,8 +14,8 @@ from constants import ModuleConstants
 
 class Configs:
   class MAXSwerveModule:
-    kDrivingConfig: SparkMaxConfig = SparkMaxConfig()
-    kTurningConfig: SparkMaxConfig = SparkMaxConfig()
+    kDrivingConfig: SparkMaxConfig = SparkMaxConfig().inverted(False)
+    kTurningConfig: SparkMaxConfig = SparkMaxConfig().inverted(False)
 
     # Use module constants to calculate conversion factors and feed forward gain.
     drivingFactor = ModuleConstants.kWheelDiameterMeters * math.pi / ModuleConstants.kDrivingMotorReduction

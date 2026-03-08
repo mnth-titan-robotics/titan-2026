@@ -133,7 +133,7 @@ class Subsystems:
         LeftMotorId = 20
         RightMotorId = 21
         # Minimum speed in RPM required for the launcher to reliably fire projectiles
-        MinLaunchSpeed = 0.6
+        MinLaunchSpeed = -4000
       
 
     class Intake:

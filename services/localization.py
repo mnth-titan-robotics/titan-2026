@@ -17,8 +17,8 @@ class Localization:
         self._posePublisher = self.nt_instance.getTable("Localization").getStructTopic("Pose3d", Pose3d).publish()
         self._velocityPublisher = self.nt_instance.getTable("Localization").getStructTopic("ChassisSpeeds", ChassisSpeeds).publish()
         self._robotToQuestnav = Transform3d(
-            Translation3d(units.inchesToMeters(17.5), 0, units.inchesToMeters(14.125)),
-            Rotation3d(0, 0, 0)
+            Translation3d(units.inchesToMeters(-9.0), units.inchesToMeters(13.5), units.inchesToMeters(14.125)),
+            Rotation3d(0, 0, units.degreesToRadians(90))
         )
         self._questnavToRobot = self._robotToQuestnav.inverse()
 

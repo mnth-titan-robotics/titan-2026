@@ -38,6 +38,8 @@ class RobotContainer:
         return self.CommandSelector.ONE
 
     def __init__(self) -> None:
+        self.invertLeft = -1.0
+        self.invertRight = -1.0
         self._initServices()
         self._initSubsystems()
         self._initControllers()
@@ -72,9 +74,9 @@ class RobotContainer:
         # Set default commands for all subsystems
         self.drive.setDefaultCommand(
             self.drive.drive_joystick_command(
-                lambda: -utils.apply_deadband(self._driverController.getLeftY()) ** 3,
-                lambda: -utils.apply_deadband(self._driverController.getLeftX()) ** 3,
-                lambda: -utils.apply_deadband(self._driverController.getRightX()) ** 3
+                lambda: self.invertLeft * utils.apply_deadband(self._driverController.getLeftY()),
+                lambda: self.invertLeft *utils.apply_deadband(self._driverController.getLeftX()),
+                lambda: self.invertRight * utils.apply_deadband(self._driverController.getRightX()) ** 3
             )
         )
         self.launcher.setDefaultCommand(
@@ -94,17 +96,21 @@ class RobotContainer:
         """Use this method to define your button->command mappings."""
         # All possible XBOX controller inputs are included below for easy reference.
         # Leaving unused, commented lines helps us keep track of what inputs aren't being used.
-        # self.driver.rightStick().whileTrue(cmd.none())
-        # self.driver.leftStick().whileTrue(cmd.none())
-        self._driverController.leftTrigger().whileTrue(self.intake.intake())
-        self._driverController.rightTrigger().whileTrue(self.launcher.start())
+        def left():
+            self.invertLeft *= -1.0
+        def right():
+            self.invertRight *= -1.0
+        self._driverController.rightStick().whileTrue(cmd.runOnce(right))
+        self._driverController.leftStick().whileTrue(cmd.runOnce(left))
+        self._operatorController.leftTrigger().whileTrue(self.intake.intake())
+        self._operatorController.rightTrigger().whileTrue(self.launcher.start())
         # self.driver.rightBumper().whileTrue(cmd.none())
-        self._driverController.leftBumper().whileTrue(self.intake.reverse())
-        self._driverController.povUp().whileTrue(self.intakeExtender.extend())
-        self._driverController.povDown().whileTrue(self.intakeExtender.retract())
+        self._operatorController.leftBumper().whileTrue(self.intake.reverse())
+        self._operatorController.povUp().whileTrue(self.intakeExtender.extend())
+        self._operatorController.povDown().whileTrue(self.intakeExtender.retract())
         # self.driver.povLeft().whileTrue(cmd.none())
         # self.driver.povRight().whileTrue(cmd.none())
-        self._driverController.a().whileTrue(self.indexer.feed())
+        self._operatorController.a().whileTrue(self.indexer.feed())
         # self.driver.b().whileTrue(cmd.none())
         # self.driver.y().whileTrue(cmd.none())
         # self.driver.x().whileTrue(cmd.none())
@@ -117,4 +123,4 @@ class RobotContainer:
 
         :returns: the command to run in autonomous
         """
-        return self.auto.get()
+        return self.auto.auto_center()

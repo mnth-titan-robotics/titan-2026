@@ -67,12 +67,13 @@ class Auto:
         self._selectedAuto = autoCmd
 
     def auto_center(self) -> Command:
-        # Move forward at 25% speed for 3.25s, then stop
+        # Move backward at 75% speed for 0.5s, launch fuel for 5s, then stop
         drive = self._robot.drive
-        speeds = ChassisSpeeds(vx=0.25)
+        speeds = ChassisSpeeds(vx=-0.75)
         return cmd.sequence(
-            drive.drive_command(lambda: speeds).withTimeout(3.25),
-            drive.drive_command(ChassisSpeeds).withTimeout(0.1)
+            
+            drive.drive_command(lambda: speeds).withTimeout(0.5),
+            self.auto_launch(units.seconds(2.0))
         )
 
     def auto_test(self) -> Command:
@@ -103,3 +104,4 @@ class Auto:
             self._robot.launcher.start(),
             self._launch_when_ready()
         ).withTimeout(duration)
+    

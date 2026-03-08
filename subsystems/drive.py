@@ -11,7 +11,7 @@ from ntcore import NetworkTableInstance
 from wpilib import ADIS16470_IMU
 from wpimath.geometry import Rotation2d, Pose2d, Pose3d
 from wpimath.kinematics import ChassisSpeeds, SwerveModuleState, SwerveDrive4Odometry, SwerveDrive4Kinematics
-
+import math
 from wpimath.trajectory import Trajectory
 import constants
 from services import Tracker
@@ -130,13 +130,19 @@ class Drive(Subsystem):
             get_y: Callable[[], float],
             get_omega: Callable[[], float]) -> Command:
         """Returns a command that drives the robot with joystick input"""
-        return self.drive_command(
-            lambda: ChassisSpeeds(
-                get_x() * DriveConstants.kMaxSpeedMetersPerSecond,
-                get_y() * DriveConstants.kMaxSpeedMetersPerSecond,
+        def run() -> ChassisSpeeds:
+            x = get_x()
+            y = get_y()
+            angle = math.atan2(y, x)
+            mag = math.sqrt(y ** 2 + x ** 2) ** 3
+            x = math.cos(angle) * mag
+            y = math.sin(angle) * mag
+            return ChassisSpeeds(
+                x * DriveConstants.kMaxSpeedMetersPerSecond,
+                y * DriveConstants.kMaxSpeedMetersPerSecond,
                 get_omega() * DriveConstants.kMaxAngularSpeed
             )
-        )
+        return self.drive_command(run)
 
     def drive_command(
             self,
@@ -182,8 +188,8 @@ class Drive(Subsystem):
         Sets the swerve ModuleStates.
         :param desiredStates: The desired SwerveModule states.
         """
-        SwerveDrive4Kinematics.desaturateWheelSpeeds(
-            desiredStates, DriveConstants.kMaxSpeedMetersPerSecond)  # type: ignore
+        # SwerveDrive4Kinematics.desaturateWheelSpeeds(
+        #     desiredStates, DriveConstants.kMaxSpeedMetersPerSecond)  # type: ignore
         self._frontLeft.setDesiredState(desiredStates[0])
         self._frontRight.setDesiredState(desiredStates[1])
         self._rearLeft.setDesiredState(desiredStates[2])

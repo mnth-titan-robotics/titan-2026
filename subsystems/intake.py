@@ -20,7 +20,7 @@ class IntakeExtender(Subsystem):
     
         # Create motor config
         spark_config = rev.SparkMaxConfig()
-        spark_config.inverted(False)
+        spark_config.inverted(True)
         spark_config.smartCurrentLimit(self.Constants.MotorCurrentLimit)
         spark_config.closedLoop \
             .pid(*self.Constants.PID)
@@ -54,7 +54,7 @@ class IntakeExtender(Subsystem):
 
         def command_function():
             # self._closedLoopController.setReference(self._targetPosition, rev.SparkBase.ControlType.kMAXMotionPositionControl)
-            self._leftMotor.set(0.1)
+            self._leftMotor.set(0.3)
 
         return self.run(command_function).withName("IntakeExtend")
 
@@ -64,7 +64,7 @@ class IntakeExtender(Subsystem):
 
         def command_function():
             # self._closedLoopController.setReference(self._targetPosition, rev.SparkBase.ControlType.kMAXMotionPositionControl)
-            self._leftMotor.set(-0.1)
+            self._leftMotor.set(-0.3)
 
         return self.run(command_function).withName("IntakeRetract")
 
@@ -79,7 +79,7 @@ class Intake(Subsystem):
         self._speed_entry.setDefault(self.Constants.IntakeSpeed)
         self._motor = rev.SparkMax(
             self.Constants.MotorId,
-            rev.SparkBase.MotorType.kBrushed
+            rev.SparkBase.MotorType.kBrushless
         )
         # self._motor.setCANTimeout(250)
         spark_config = rev.SparkMaxConfig()

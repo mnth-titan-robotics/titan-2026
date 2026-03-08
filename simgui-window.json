@@ -6,11 +6,11 @@
     "GLOBAL": {
       "font": "Proggy Dotted",
       "fps": "120",
-      "height": "1440",
+      "height": "1055",
       "maximized": "0",
       "style": "0",
       "userScale": "2",
-      "width": "2560",
+      "width": "1924",
       "xpos": "-1",
       "ypos": "-1"
     }
@@ -29,26 +29,26 @@
     "###FMS": {
       "Collapsed": "0",
       "Pos": "7,810",
-      "Size": "336,158"
+      "Size": "202,214"
     },
     "###Joysticks": {
       "Collapsed": "0",
       "Pos": "14,980",
-      "Size": "976,82"
+      "Size": "976,278"
     },
     "###NetworkTables": {
       "Collapsed": "0",
-      "Pos": "1386,1130",
+      "Pos": "1386,1036",
       "Size": "1230,367"
     },
     "###NetworkTables Info": {
       "Collapsed": "0",
-      "Pos": "252,1117",
+      "Pos": "252,1036",
       "Size": "1125,217"
     },
     "###Other Devices": {
       "Collapsed": "0",
-      "Pos": "2151,33",
+      "Pos": "1905,33",
       "Size": "375,851"
     },
     "###RoboRIO": {

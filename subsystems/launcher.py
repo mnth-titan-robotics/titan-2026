@@ -14,6 +14,8 @@ class Launcher(Subsystem):
         self._speed_entry = self.nt_instance.getFloatTopic("Subsystems/Launcher/Launcher_Speed").getEntry(self.Constants.LaunchSpeed)
         self._speed_entry.setDefault(self.Constants.LaunchSpeed)
 
+        self._cur_speed = self.nt_instance.getFloatTopic("Subsystems/Launcher/Launcher_Velocity").publish()
+
         self._leftMotor = rev.SparkMax(
             self.Constants.LeftMotorId,
             rev.SparkBase.MotorType.kBrushless
@@ -33,6 +35,9 @@ class Launcher(Subsystem):
 
         self._encoder = self._leftMotor.getEncoder()
 
+    def periodic(self) -> None:
+        self._cur_speed.set(self._encoder.getVelocity())
+
     def start(self) -> Command:
         """Starts the launcher at launch speed."""
 
@@ -51,4 +56,4 @@ class Launcher(Subsystem):
 
     def at_speed(self) -> bool:
         """Returns True if the launcher is at launch speed."""
-        return abs(self._encoder.getVelocity()) >= self.Constants.MinLaunchSpeed
+        return abs(self._encoder.getVelocity()) <= self.Constants.MinLaunchSpeed
