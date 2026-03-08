@@ -20,19 +20,23 @@
 
 from random import gauss
 
+from rev import SparkMaxSim
 import wpilib
 from pyfrc.physics.core import PhysicsInterface
 from wpilib import RobotController
-from wpilib.simulation import ADIS16470_IMUSim
+from wpilib.simulation import ADIS16470_IMUSim, DCMotorSim, FlywheelSim
+from wpimath.system.plant import DCMotor, LinearSystemId
 from wpimath import units
 from wpimath.geometry import Pose3d, Rotation3d
 from wpimath.interpolation import TimeInterpolatablePose2dBuffer
 
 from robot import Robot
+from robotcontainer import RobotContainer
 from services.questnav.questnav_data import PoseFrame
 from services.questnav.questnav_stub import QuestNavStub
 from sim.mecanum_sim import MecanumSim
 from sim.swerve_drive_sim import SwerveDriveSim
+from subsystems.launcher import Launcher
 
 
 class QuestNavSim:
@@ -54,10 +58,10 @@ class QuestNavSim:
         self.frame_number += 1
         self._questnav.unread_frames.append(PoseFrame(pose3d, t, t, self.frame_number))
 
-
 class PhysicsEngine:
     def __init__(self, physics_controller: PhysicsInterface, robot: Robot):
         self._robot = robot
+        self._container: RobotContainer = robot.container
         self.physics_controller = physics_controller
         self._questNavSim = QuestNavSim(physics_controller, robot.container.localization._questnav)
         self._driveSim = SwerveDriveSim(robot.container.drive)
@@ -65,7 +69,6 @@ class PhysicsEngine:
         self._gyroSim = ADIS16470_IMUSim(robot.container.drive._gyro)
 
     def update_sim(self, now: float, tm_diff: float) -> None:
-        vBus = RobotController.getBatteryVoltage()
         self._questNavSim.simulationPeriodic(tm_diff)
         if self._robot.isEnabled():
             chassisSpeeds = self._driveSim.simulationPeriodic(tm_diff)
