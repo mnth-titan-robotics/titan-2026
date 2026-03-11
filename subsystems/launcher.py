@@ -31,10 +31,17 @@ class Launcher(Subsystem):
         )
         self._leftMotor.setCANTimeout(250)
         self._rightMotor.setCANTimeout(250)
+        self._controller = self._leftMotor.getClosedLoopController()
         spark_config = rev.SparkMaxConfig()
         spark_config.inverted(True)
         spark_config.smartCurrentLimit(self.Constants.MotorCurrentLimit)
         spark_config.voltageCompensation(self.Constants.MotorVComp)
+        spark_config.closedLoop \
+            .setFeedbackSensor(rev.FeedbackSensor.kPrimaryEncoder) \
+            .pid(0.7, 0.001, 0.6)
+        spark_config.encoder \
+            .positionConversionFactor(.001) \
+            .velocityConversionFactor(.001)
         self._leftMotor.configure(spark_config, rev.ResetMode.kResetSafeParameters, rev.PersistMode.kPersistParameters)
         spark_config.follow(self.Constants.LeftMotorId, True)
         self._rightMotor.configure(spark_config, rev.ResetMode.kResetSafeParameters, rev.PersistMode.kPersistParameters)
@@ -76,7 +83,7 @@ class Launcher(Subsystem):
         """Starts the launcher at launch speed."""
 
         def command_function():
-            self._leftMotor.set(self._speed_entry.get())
+            self._controller.setSetpoint(self._speed_entry.get(), rev.SparkLowLevel.ControlType.kVelocity)
 
         return self.run(command_function).withName("LauncherStart")
 
