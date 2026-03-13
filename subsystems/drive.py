@@ -9,6 +9,7 @@ from typing import Callable
 from commands2 import Subsystem, Command, cmd
 from ntcore import NetworkTableInstance
 from wpilib import ADIS16470_IMU
+from wpilib.drive import Vector2d
 from wpimath.geometry import Rotation2d, Pose2d, Pose3d
 from wpimath.kinematics import ChassisSpeeds, SwerveModuleState, SwerveDrive4Odometry, SwerveDrive4Kinematics
 import math
@@ -17,7 +18,7 @@ import constants
 from services import Tracker
 from services.localization import Localization
 from .max_swerve_module import MAXSwerveModule
-
+import numpy
 IMUAxis = ADIS16470_IMU.IMUAxis
 DriveConstants = constants.Subsystems.Drive
 
@@ -136,20 +137,24 @@ class Drive(Subsystem):
             get_omega: Callable[[], float]) -> Command:
         """Returns a command that drives the robot with joystick input"""
         def run() -> ChassisSpeeds:
-            x = get_x()
-            y = get_y()
-            angle = math.atan2(y, x)
-            mag = math.sqrt(y ** 2 + x ** 2) ** 3
-            x = math.cos(angle) * mag
-            y = math.sin(angle) * mag
-
+            input_vec = numpy.array([get_x(), get_y()])
+            omega = get_omega() * DriveConstants.kMaxAngularSpeed
+            # Get the magnitude of the vector (how far the joystick is pushed in that direction)
+            mag = numpy.linalg.norm(input_vec)
+            if mag < 0.05:
+                # If the magnitude is very small don't move at all
+                return ChassisSpeeds(0, 0, omega)
+            
+            # Cube the magnitude to provide finer control at low speeds while still allowing full speed at max joystick deflection
+            v = input_vec * mag ** 2 * DriveConstants.kMaxSpeedMetersPerSecond
             input_speeds = ChassisSpeeds(
-                x * DriveConstants.kMaxSpeedMetersPerSecond,
-                y * DriveConstants.kMaxSpeedMetersPerSecond,
-                get_omega() * DriveConstants.kMaxAngularSpeed
+                v[0],
+                v[1],
+                omega
             )
             output_speeds = input_speeds
             if self._fieldRelative:
+                # Convert the input speeds from field-relative to robot-relative using the gyro angle
                 output_speeds = ChassisSpeeds.fromFieldRelativeSpeeds(
                     input_speeds.vx,
                     input_speeds.vy,

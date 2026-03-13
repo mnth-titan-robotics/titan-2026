@@ -59,12 +59,6 @@ class Auto:
         # callback below
         self.autoChooser = AutoBuilder.buildAutoChooser()
         SmartDashboard.putData("Robot/Auto", self.autoChooser)
-        self.autoChooser.onChange(self._on_auto_change)
-    
-    def _on_auto_change(self, a):
-        if isinstance(a, PathPlannerAuto):
-            print(a._startingPose)
-
 
     def get(self):
         return self.autoChooser.getSelected()
