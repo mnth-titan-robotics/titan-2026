@@ -39,7 +39,7 @@ class Launcher(Subsystem):
         spark_config.voltageCompensation(self.Constants.MotorVComp)
         spark_config.closedLoop \
             .setFeedbackSensor(rev.FeedbackSensor.kPrimaryEncoder) \
-            .pidf(0.15, 0.002, 0.1, 0.105)
+            .pidf(0.33, 0.0, 0.0, 0.25)
         spark_config.encoder \
             .positionConversionFactor(.001) \
             .velocityConversionFactor(.001)
