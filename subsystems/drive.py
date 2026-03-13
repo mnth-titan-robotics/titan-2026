@@ -23,6 +23,8 @@ DriveConstants = constants.Subsystems.Drive
 
 
 class Drive(Subsystem):
+    _fieldRelative = True
+
     def __init__(self, localization: Localization, tracker: Tracker):
         self._localization = localization
         self._tracker = tracker
@@ -53,12 +55,14 @@ class Drive(Subsystem):
 
         networkTable = NetworkTableInstance.getDefault()
 
+        topic_key = "Swerve"
         self._desiredStatePublisher = networkTable.getStructArrayTopic(
             "Swerve/Modules/DesiredStates", SwerveModuleState).publish()
-        self._statePublisher = networkTable.getStructArrayTopic("Swerve/Modules/States", SwerveModuleState).publish()
-        self._pose_publisher = networkTable.getStructTopic("Swerve/Pose", Pose2d).publish()
-        self._anglePublisher = networkTable.getStructTopic("Swerve/Angle", Rotation2d).publish()
-
+        self._statePublisher = networkTable.getStructArrayTopic(f"{topic_key}/Modules/States", SwerveModuleState).publish()
+        self._pose_publisher = networkTable.getStructTopic(f"{topic_key}/Pose", Pose2d).publish()
+        self._anglePublisher = networkTable.getStructTopic(f"{topic_key}/Angle", Rotation2d).publish()
+        self._fieldRelativePublisher = networkTable.getBooleanTopic(f"{topic_key}/FieldRelative").publish()
+        
         # Odometry class for tracking robot pose
         self._odometry = SwerveDrive4Odometry(
             DriveConstants.kDriveKinematics,
@@ -101,6 +105,7 @@ class Drive(Subsystem):
         ])
 
         self._anglePublisher.set(self._get_gyro_angle())
+        self._fieldRelativePublisher.set(self._fieldRelative)
 
     def get_pose(self) -> Pose2d:
         """
@@ -137,11 +142,22 @@ class Drive(Subsystem):
             mag = math.sqrt(y ** 2 + x ** 2) ** 3
             x = math.cos(angle) * mag
             y = math.sin(angle) * mag
-            return ChassisSpeeds(
+
+            input_speeds = ChassisSpeeds(
                 x * DriveConstants.kMaxSpeedMetersPerSecond,
                 y * DriveConstants.kMaxSpeedMetersPerSecond,
                 get_omega() * DriveConstants.kMaxAngularSpeed
             )
+            output_speeds = input_speeds
+            if self._fieldRelative:
+                output_speeds = ChassisSpeeds.fromFieldRelativeSpeeds(
+                    input_speeds.vx,
+                    input_speeds.vy,
+                    input_speeds.omega,
+                    self._get_gyro_angle()
+                )
+            return output_speeds
+            
         return self.drive_command(run)
 
     def drive_command(
@@ -151,6 +167,13 @@ class Drive(Subsystem):
         return self.run(
             lambda: self.set_chassis_speeds(get_input())
         )
+
+    def toggle_field_relative_command(self) -> Command:
+        """Returns a command that toggles field-relative control on and off"""
+        def toggle():
+            self._fieldRelative = not self._fieldRelative
+
+        return self.runOnce(toggle).withName("ToggleFieldRelative")
 
     def get_chassis_speeds(self) -> ChassisSpeeds:
         return DriveConstants.kDriveKinematics.toChassisSpeeds(self._get_module_states())  # type: ignore
@@ -188,8 +211,8 @@ class Drive(Subsystem):
         Sets the swerve ModuleStates.
         :param desiredStates: The desired SwerveModule states.
         """
-        # SwerveDrive4Kinematics.desaturateWheelSpeeds(
-        #     desiredStates, DriveConstants.kMaxSpeedMetersPerSecond)  # type: ignore
+        SwerveDrive4Kinematics.desaturateWheelSpeeds(
+            desiredStates, DriveConstants.kMaxSpeedMetersPerSecond)  # type: ignore
         self._frontLeft.setDesiredState(desiredStates[0])
         self._frontRight.setDesiredState(desiredStates[1])
         self._rearLeft.setDesiredState(desiredStates[2])
@@ -205,7 +228,8 @@ class Drive(Subsystem):
         self._rearRight.resetEncoders()
 
     def _get_gyro_angle(self) -> Rotation2d:
-        return Rotation2d.fromDegrees(self._gyro.getAngle(IMUAxis.kZ))
+        # Gyro is mounted upside-down, so we negate the angle
+        return Rotation2d.fromDegrees(-self._gyro.getAngle(IMUAxis.kZ))
 
     def zeroHeading(self) -> None:
         """

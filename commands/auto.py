@@ -8,7 +8,7 @@ from wpimath.kinematics import ChassisSpeeds
 from wpimath.trajectory import TrajectoryGenerator, TrajectoryConfig
 from wpimath.geometry import Pose2d, Rotation2d, Translation2d
 from commands.game import Game
-from pathplannerlib.auto import AutoBuilder, DriveFeedforwards, NamedCommands
+from pathplannerlib.auto import AutoBuilder, DriveFeedforwards, NamedCommands, PathPlannerAuto
 from pathplannerlib.controller import PPHolonomicDriveController
 import constants
 
@@ -59,6 +59,12 @@ class Auto:
         # callback below
         self.autoChooser = AutoBuilder.buildAutoChooser()
         SmartDashboard.putData("Robot/Auto", self.autoChooser)
+        self.autoChooser.onChange(self._on_auto_change)
+    
+    def _on_auto_change(self, a):
+        if isinstance(a, PathPlannerAuto):
+            print(a._startingPose)
+
 
     def get(self):
         return self.autoChooser.getSelected()

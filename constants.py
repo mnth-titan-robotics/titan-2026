@@ -107,26 +107,26 @@ class Subsystems:
         )
 
          # Angular offsets of the modules relative to the chassis in radians
-        kFrontLeftChassisAngularOffset = -math.pi / 2
-        kFrontRightChassisAngularOffset = 0
-        kRearLeftChassisAngularOffset = math.pi
-        kRearRightChassisAngularOffset = math.pi / 2
+        kFrontLeftChassisAngularOffset = math.pi / 2
+        kFrontRightChassisAngularOffset = math.pi
+        kRearLeftChassisAngularOffset = 0.0
+        kRearRightChassisAngularOffset = -math.pi / 2
 
         # SPARK MAX CAN IDs
-        kFrontLeftDrivingCanId: int = 5
-        kRearLeftDrivingCanId: int = 3
-        kFrontRightDrivingCanId: int = 7
-        kRearRightDrivingCanId: int = 1
+        kFrontLeftDrivingCanId: int = 1
+        kRearLeftDrivingCanId: int = 7
+        kFrontRightDrivingCanId: int = 3
+        kRearRightDrivingCanId: int = 5
 
-        kFrontLeftTurningCanId: int = 6
-        kRearLeftTurningCanId: int = 4
-        kFrontRightTurningCanId: int = 8
-        kRearRightTurningCanId: int = 2
+        kFrontLeftTurningCanId: int = 2
+        kRearLeftTurningCanId: int = 8
+        kFrontRightTurningCanId: int = 4
+        kRearRightTurningCanId: int = 6
 
         kGyroReversed: bool = False
 
     class Launcher:
-        MotorCurrentLimit = 40
+        MotorCurrentLimit = 60
         MotorVComp = 12
         LaunchSpeed = 3.2
         IdleSpeed = 0.2
@@ -134,12 +134,13 @@ class Subsystems:
         RightMotorId = 21
         # Minimum speed in RPM required for the launcher to reliably fire projectiles
         MinLaunchSpeed = 4.0
+        LauncherPID = PID(0.7, 0.001, 0.6)
       
 
     class Intake:
         MotorId = 12
         MotorCurrentLimit = 25
-        MotorVComp = 10
+        MotorVComp = 12
         IntakeSpeed = 0.8
         ReverseSpeed = -0.5
 
@@ -148,7 +149,7 @@ class Subsystems:
         RightMotorId = 11
         GearReduction = 4.0 * 3.0 * 4.0 * 64.0 / 26.0
         MotorCurrentLimit = 25
-        MotorVComp = 10
+        MotorVComp = 12
         MotorSpeed = 0.5
         MaxAcceleration = 0.5
         AllowedProfileError = 0.01
@@ -161,7 +162,7 @@ class Subsystems:
     class Indexer:
         MotorId = 16
         MotorCurrentLimit = 25
-        MotorVComp = 10
+        MotorVComp = 12
         IndexerSpeed = 0.9
         ReverseSpeed = -0.5
 

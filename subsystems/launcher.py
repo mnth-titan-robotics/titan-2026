@@ -16,6 +16,7 @@ class Launcher(Subsystem):
         self._speed_entry = self.nt_instance.getFloatTopic(
             "Subsystems/Launcher/Launcher_Speed").getEntry(self.Constants.LaunchSpeed)
         self._cur_speed = self.nt_instance.getFloatTopic("Subsystems/Launcher/Launcher_Velocity").publish()
+        self._cur_amps = self.nt_instance.getFloatTopic("Subsystems/Launcher/Launcher_Amps").publish()
         self._at_speed = self.nt_instance.getBooleanTopic("Subsystems/Launcher/At_Speed").publish()
         self._speed_entry.setDefault(self.Constants.LaunchSpeed)
 
@@ -38,7 +39,7 @@ class Launcher(Subsystem):
         spark_config.voltageCompensation(self.Constants.MotorVComp)
         spark_config.closedLoop \
             .setFeedbackSensor(rev.FeedbackSensor.kPrimaryEncoder) \
-            .pid(0.7, 0.001, 0.6)
+            .pidf(0.15, 0.002, 0.1, 0.105)
         spark_config.encoder \
             .positionConversionFactor(.001) \
             .velocityConversionFactor(.001)
@@ -63,6 +64,7 @@ class Launcher(Subsystem):
         """Updates the current speed of the launcher on the dashboard."""
         self._cur_speed.set(self._encoder.getVelocity())
         self._at_speed.set(self.at_speed())
+        self._cur_amps.set(self._leftMotor.getOutputCurrent())
 
     def simulationPeriodic(self) -> None:
         vbus = RobotController.getBatteryVoltage()

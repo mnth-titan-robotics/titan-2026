@@ -15,6 +15,7 @@ class IntakeExtender(Subsystem):
         topicKey = "Subsystems/Intake"
         self._reverse_limit_entry = self.nt_instance.getFloatTopic(f"{topicKey}/Extender_ReverseLimit").getEntry(self.Constants.ReverseLimit)
         self._forward_limit_entry = self.nt_instance.getFloatTopic(f"{topicKey}/Extender_ForwardLimit").getEntry(self.Constants.ForwardLimit)
+        self._pos_publisher = self.nt_instance.getFloatTopic(f"{topicKey}/Extender_Pos").publish()
         self._reverse_limit_entry.setDefault(self.Constants.ReverseLimit)
         self._forward_limit_entry.setDefault(self.Constants.ForwardLimit)
 
@@ -71,6 +72,7 @@ class IntakeExtender(Subsystem):
 
     def periodic(self) -> None:
         """Updates the current state of the intake."""
+        self._pos_publisher.set(self.encoder.getPosition())
 
     def simulationPeriodic(self) -> None:
         vbus = RobotController.getBatteryVoltage()

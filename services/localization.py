@@ -61,6 +61,7 @@ class Localization:
         return self._pose.toPose2d()
 
     def reset_pose2d(self, pose: Pose2d) -> None:
+        print(f"Resest pose: {pose.x}, {pose.y}")
         pose3d = Pose3d(
             pose.translation().x,
             pose.translation().y,
