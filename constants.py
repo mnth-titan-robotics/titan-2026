@@ -10,6 +10,7 @@ from wpimath.trajectory import TrapezoidProfile
 from lib.classes import MotorControllerType, DifferentialModuleConstants, DifferentialModuleConfig, DriftCorrectionConstants, PID, Tolerance
 from lib.enums import ModuleLocation
 
+ENABLE_TELEMETRY = False
 
 class Controllers:
     DriverPort = 0
@@ -128,7 +129,7 @@ class Subsystems:
     class Launcher:
         MotorCurrentLimit = 60
         MotorVComp = 12
-        LaunchSpeed = 3.2
+        LaunchSpeed = 4.0
         IdleSpeed = 0.2
         LeftMotorId = 20
         RightMotorId = 21

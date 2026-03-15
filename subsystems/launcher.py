@@ -5,6 +5,7 @@ import constants
 from wpilib import RobotBase, RobotController
 from wpimath import units
 
+ENABLE_TELEMETRY = constants.ENABLE_TELEMETRY
 
 class Launcher(Subsystem):
     """Controls the launcher mechanism for firing projectiles."""
@@ -15,12 +16,11 @@ class Launcher(Subsystem):
         self.nt_instance = ntcore.NetworkTableInstance.getDefault()
         self._speed_entry = self.nt_instance.getFloatTopic(
             "Subsystems/Launcher/Launcher_Speed").getEntry(self.Constants.LaunchSpeed)
-        self._cur_speed = self.nt_instance.getFloatTopic("Subsystems/Launcher/Launcher_Velocity").publish()
-        self._cur_amps = self.nt_instance.getFloatTopic("Subsystems/Launcher/Launcher_Amps").publish()
-        self._at_speed = self.nt_instance.getBooleanTopic("Subsystems/Launcher/At_Speed").publish()
         self._speed_entry.setDefault(self.Constants.LaunchSpeed)
-
-        self._cur_speed = self.nt_instance.getFloatTopic("Subsystems/Launcher/Launcher_Velocity").publish()
+        if ENABLE_TELEMETRY:
+            self._cur_speed = self.nt_instance.getFloatTopic("Subsystems/Launcher/Launcher_Velocity").publish()
+            self._cur_amps = self.nt_instance.getFloatTopic("Subsystems/Launcher/Launcher_Amps").publish()
+            self._at_speed = self.nt_instance.getBooleanTopic("Subsystems/Launcher/At_Speed").publish()
 
         self._leftMotor = rev.SparkMax(
             self.Constants.LeftMotorId,
@@ -62,9 +62,10 @@ class Launcher(Subsystem):
 
     def periodic(self) -> None:
         """Updates the current speed of the launcher on the dashboard."""
-        self._cur_speed.set(self._encoder.getVelocity())
-        self._at_speed.set(self.at_speed())
-        self._cur_amps.set(self._leftMotor.getOutputCurrent())
+        if ENABLE_TELEMETRY:
+            self._cur_speed.set(self._encoder.getVelocity())
+            self._at_speed.set(self.at_speed())
+            self._cur_amps.set(self._leftMotor.getOutputCurrent())
 
     def simulationPeriodic(self) -> None:
         vbus = RobotController.getBatteryVoltage()

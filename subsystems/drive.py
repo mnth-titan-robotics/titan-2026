@@ -9,7 +9,6 @@ from typing import Callable
 from commands2 import Subsystem, Command, cmd
 from ntcore import NetworkTableInstance
 from wpilib import ADIS16470_IMU
-from wpilib.drive import Vector2d
 from wpimath.geometry import Rotation2d, Pose2d, Pose3d
 from wpimath.kinematics import ChassisSpeeds, SwerveModuleState, SwerveDrive4Odometry, SwerveDrive4Kinematics
 import math
@@ -21,6 +20,7 @@ from .max_swerve_module import MAXSwerveModule
 import numpy
 IMUAxis = ADIS16470_IMU.IMUAxis
 DriveConstants = constants.Subsystems.Drive
+ENABLE_TELEMETRY = constants.ENABLE_TELEMETRY
 
 
 class Drive(Subsystem):
@@ -57,12 +57,13 @@ class Drive(Subsystem):
         networkTable = NetworkTableInstance.getDefault()
 
         topic_key = "Swerve"
-        self._desiredStatePublisher = networkTable.getStructArrayTopic(
-            "Swerve/Modules/DesiredStates", SwerveModuleState).publish()
-        self._statePublisher = networkTable.getStructArrayTopic(f"{topic_key}/Modules/States", SwerveModuleState).publish()
-        self._pose_publisher = networkTable.getStructTopic(f"{topic_key}/Pose", Pose2d).publish()
-        self._anglePublisher = networkTable.getStructTopic(f"{topic_key}/Angle", Rotation2d).publish()
-        self._fieldRelativePublisher = networkTable.getBooleanTopic(f"{topic_key}/FieldRelative").publish()
+        if ENABLE_TELEMETRY:
+            self._desiredStatePublisher = networkTable.getStructArrayTopic(
+                "Swerve/Modules/DesiredStates", SwerveModuleState).publish()
+            self._statePublisher = networkTable.getStructArrayTopic(f"{topic_key}/Modules/States", SwerveModuleState).publish()
+            self._pose_publisher = networkTable.getStructTopic(f"{topic_key}/Pose", Pose2d).publish()
+            self._anglePublisher = networkTable.getStructTopic(f"{topic_key}/Angle", Rotation2d).publish()
+            self._fieldRelativePublisher = networkTable.getBooleanTopic(f"{topic_key}/FieldRelative").publish()
         
         # Odometry class for tracking robot pose
         self._odometry = SwerveDrive4Odometry(
@@ -89,24 +90,25 @@ class Drive(Subsystem):
         self._update_telemetry()
 
     def _update_telemetry(self) -> None:
-        self._pose_publisher.set(self.get_pose())
+        if ENABLE_TELEMETRY:
+            self._pose_publisher.set(self.get_pose())
 
-        self._statePublisher.set([
-            self._frontLeft.getState(),
-            self._frontRight.getState(),
-            self._rearLeft.getState(),
-            self._rearRight.getState()]
-        )
+            self._statePublisher.set([
+                self._frontLeft.getState(),
+                self._frontRight.getState(),
+                self._rearLeft.getState(),
+                self._rearRight.getState()]
+            )
 
-        self._desiredStatePublisher.set([
-            self._frontLeft.getDesiredState(),
-            self._frontRight.getDesiredState(),
-            self._rearLeft.getDesiredState(),
-            self._rearRight.getDesiredState()
-        ])
+            self._desiredStatePublisher.set([
+                self._frontLeft.getDesiredState(),
+                self._frontRight.getDesiredState(),
+                self._rearLeft.getDesiredState(),
+                self._rearRight.getDesiredState()
+            ])
 
-        self._anglePublisher.set(self._get_gyro_angle())
-        self._fieldRelativePublisher.set(self._fieldRelative)
+            self._anglePublisher.set(self._get_gyro_angle())
+            self._fieldRelativePublisher.set(self._fieldRelative)
 
     def get_pose(self) -> Pose2d:
         """
