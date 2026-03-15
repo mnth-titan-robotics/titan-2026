@@ -3,13 +3,17 @@ import math
 
 from pathplannerlib.config import RobotConfig, PIDConstants
 from wpimath import units
-from wpimath.geometry import Translation2d
+from wpimath.geometry import Translation2d, Pose2d, Rotation2d
 from wpimath.kinematics import SwerveDrive4Kinematics, MecanumDriveKinematics
 from wpimath.trajectory import TrapezoidProfile
 
 from lib.classes import MotorControllerType, DifferentialModuleConstants, DifferentialModuleConfig, DriftCorrectionConstants, PID, Tolerance
 from lib.enums import ModuleLocation
 
+class FieldConstants:
+    kHubPose = Pose2d(Translation2d(4.5, 4.025), Rotation2d())
+    kLeftPass = Pose2d(Translation2d(2.75, 6.25), Rotation2d())
+    kRightPass = Pose2d(Translation2d(2.75, 1.5), Rotation2d())
 ENABLE_TELEMETRY = False
 
 class Controllers:
@@ -89,6 +93,7 @@ class Subsystems:
         kMaxSpeedMetersPerSecond: float = 12
         kMaxAngularSpeed: float = 2.0 * math.pi
         kMaxAcceleration: float = 1.0  # meters per second squared
+        kTurnLatency: float = 0.06 # Delay between a commanded turn and when we can expect to reach the setpoint
 
         TranslationPID = PID(P=1.5, I=0.0, D=0.1)
         RotationPID = PID(P=1.0, I=0.0, D=0.1)
@@ -134,7 +139,7 @@ class Subsystems:
         LeftMotorId = 20
         RightMotorId = 21
         # Minimum speed in RPM required for the launcher to reliably fire projectiles
-        MinLaunchSpeed = 4.0
+        MinLaunchSpeed = 3.1
         LauncherPID = PID(0.7, 0.001, 0.6)
       
 

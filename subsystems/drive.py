@@ -9,10 +9,12 @@ from typing import Callable
 from commands2 import Subsystem, Command, cmd
 from ntcore import NetworkTableInstance
 from wpilib import ADIS16470_IMU
-from wpimath.geometry import Rotation2d, Pose2d, Pose3d
+from wpimath.controller import ProfiledPIDControllerRadians
+from wpimath.geometry import Rotation2d, Pose2d, Pose3d, Translation2d, Rotation2d
 from wpimath.kinematics import ChassisSpeeds, SwerveModuleState, SwerveDrive4Odometry, SwerveDrive4Kinematics
+from wpimath.trajectory import Trajectory, TrapezoidProfileRadians
+from wpimath import units
 import math
-from wpimath.trajectory import Trajectory
 import constants
 from services import Tracker
 from services.localization import Localization
@@ -23,8 +25,17 @@ DriveConstants = constants.Subsystems.Drive
 ENABLE_TELEMETRY = constants.ENABLE_TELEMETRY
 
 
+def getTargetHeading(sourcePose: Pose2d | Pose3d, targetPose: Pose2d | Pose3d, isRobotRelative: bool = False) -> units.degrees:
+    if isinstance(sourcePose, Pose3d):
+        sourcePose = sourcePose.toPose2d()
+    if isinstance(targetPose, Pose3d):
+        targetPose = targetPose.toPose2d()
+    return math.atan2(targetPose.Y() - sourcePose.Y(), targetPose.X() - sourcePose.X()) - (sourcePose.rotation().radians() if isRobotRelative else 0)
+
 class Drive(Subsystem):
     _fieldRelative = True
+    _lockEnabled = False
+    _lock_target = Pose2d()
 
     def __init__(self, localization: Localization, tracker: Tracker):
         self._localization = localization
@@ -53,6 +64,17 @@ class Drive(Subsystem):
 
         # The gyro sensor
         self._gyro = ADIS16470_IMU()
+        self._theta_controller = ProfiledPIDControllerRadians(
+            Kp=DriveConstants.RotationPID.P,
+            Ki=DriveConstants.RotationPID.I,
+            Kd=DriveConstants.RotationPID.D,
+            constraints=TrapezoidProfileRadians.Constraints(
+                maxVelocity=DriveConstants.kMaxSpeedMetersPerSecond,
+                maxAcceleration=DriveConstants.kMaxAcceleration
+            )
+        )
+        self._theta_controller.setTolerance(math.pi / 45.0)
+        self._theta_controller.enableContinuousInput(-math.pi, math.pi)
 
         networkTable = NetworkTableInstance.getDefault()
 
@@ -60,11 +82,14 @@ class Drive(Subsystem):
         if ENABLE_TELEMETRY:
             self._desiredStatePublisher = networkTable.getStructArrayTopic(
                 "Swerve/Modules/DesiredStates", SwerveModuleState).publish()
-            self._statePublisher = networkTable.getStructArrayTopic(f"{topic_key}/Modules/States", SwerveModuleState).publish()
+            self._statePublisher = networkTable.getStructArrayTopic(
+            f"{topic_key}/Modules/States", SwerveModuleState).publish()
             self._pose_publisher = networkTable.getStructTopic(f"{topic_key}/Pose", Pose2d).publish()
             self._anglePublisher = networkTable.getStructTopic(f"{topic_key}/Angle", Rotation2d).publish()
             self._fieldRelativePublisher = networkTable.getBooleanTopic(f"{topic_key}/FieldRelative").publish()
-        
+            self._target_publisher = networkTable.getStructTopic(f"{topic_key}/Target", Pose2d).publish()
+            self._omega_publisher = networkTable.getFloatTopic(f"{topic_key}/Omega").publish()
+
         # Odometry class for tracking robot pose
         self._odometry = SwerveDrive4Odometry(
             DriveConstants.kDriveKinematics,
@@ -88,6 +113,7 @@ class Drive(Subsystem):
             )
         )
         self._update_telemetry()
+        self._update_lock_target()
 
     def _update_telemetry(self) -> None:
         if ENABLE_TELEMETRY:
@@ -109,6 +135,23 @@ class Drive(Subsystem):
 
             self._anglePublisher.set(self._get_gyro_angle())
             self._fieldRelativePublisher.set(self._fieldRelative)
+            self._target_publisher.set(self._lock_target)
+
+    def toggle_lock_command(self, lock_target: Pose2d) -> Command:
+        def run():
+            self._lockEnabled = not self._lockEnabled
+            self._lock_target = lock_target
+            if self._lockEnabled:
+                theta = getTargetHeading(self._localization.get_pose(), self._lock_target)
+                self._theta_controller.reset(units.degreesToRadians(self._get_gyro_degrees()))
+                self._theta_controller.setGoal(theta)
+        return cmd.runOnce(run)
+
+    def _update_lock_target(self):
+        if self._lockEnabled:
+            projected_pose = self._localization.get_projected_pose2d(DriveConstants.kTurnLatency)
+            theta = getTargetHeading(projected_pose, self._lock_target)
+            self._theta_controller.setGoal(theta)
 
     def get_pose(self) -> Pose2d:
         """
@@ -140,13 +183,20 @@ class Drive(Subsystem):
         """Returns a command that drives the robot with joystick input"""
         def run() -> ChassisSpeeds:
             input_vec = numpy.array([get_x(), get_y()])
-            omega = get_omega() * DriveConstants.kMaxAngularSpeed
+            if self._lockEnabled:
+                # Calculate the turning speed
+                omega = self._theta_controller.calculate(units.degreesToRadians(self._get_gyro_degrees())) * DriveConstants.kMaxAngularSpeed
+            else:
+                omega = get_omega() * DriveConstants.kMaxAngularSpeed
+
+            if ENABLE_TELEMETRY:
+                self._omega_publisher.set(omega)
             # Get the magnitude of the vector (how far the joystick is pushed in that direction)
             mag = numpy.linalg.norm(input_vec)
             if mag < 0.05:
                 # If the magnitude is very small don't move at all
                 return ChassisSpeeds(0, 0, omega)
-            
+
             # Cube the magnitude to provide finer control at low speeds while still allowing full speed at max joystick deflection
             v = input_vec * mag ** 2 * DriveConstants.kMaxSpeedMetersPerSecond
             input_speeds = ChassisSpeeds(
@@ -164,7 +214,7 @@ class Drive(Subsystem):
                     self._get_gyro_angle()
                 )
             return output_speeds
-            
+
         return self.drive_command(run)
 
     def drive_command(
@@ -234,9 +284,12 @@ class Drive(Subsystem):
         self._frontRight.resetEncoders()
         self._rearRight.resetEncoders()
 
+    def _get_gyro_degrees(self) -> float:
+        return -self._gyro.getAngle(IMUAxis.kZ)
+
     def _get_gyro_angle(self) -> Rotation2d:
         # Gyro is mounted upside-down, so we negate the angle
-        return Rotation2d.fromDegrees(-self._gyro.getAngle(IMUAxis.kZ))
+        return Rotation2d.fromDegrees(self._get_gyro_degrees())
 
     def zeroHeading(self) -> None:
         """

@@ -93,7 +93,7 @@ class Auto:
             trajectory=trajectory
         )
     
-    def _launch_when_ready(self) -> Command:
+    def _feed_when_at_speed(self) -> Command:
         return self._robot.indexer.stop() \
             .until(self._robot.launcher.at_speed) \
             .andThen(self._robot.indexer.feed())
@@ -102,6 +102,6 @@ class Auto:
         # Auto command that starts the launcher, waits until at speed, then launches for the specified duration
         return cmd.parallel(
             self._robot.launcher.start(),
-            self._launch_when_ready()
+            self._feed_when_at_speed()
         ).withTimeout(duration)
     

@@ -9,6 +9,7 @@ from wpimath.controller import PIDController
 from wpimath.filter import SlewRateLimiter
 from wpimath.geometry import Pose2d, Rotation2d, Translation2d
 from wpimath.kinematics import ChassisSpeeds, SwerveModuleState
+from wpimath.system.plant import DCMotor, LinearSystemId
 from wpimath.system import plant
 from subsystems import Drive, DriveConstants, MAXSwerveModule
 from constants import ModuleConstants
@@ -50,30 +51,20 @@ def _createSim(motor_controller: SparkFlex | SparkMax, motor: plant.DCMotor) -> 
 
 
 class SwerveDriveSim:
-    _pose: Pose2d = Pose2d()
-
     class SwerveModuleSim:
         def __init__(self, module: MAXSwerveModule):
-            turnPlant = plant.LinearSystemId.flywheelSystem(
-                kTurningMotor, ModuleConstants.kTurningMotorReduction, kTurningMomentOfInertia
-            )
-            drivePlant = plant.LinearSystemId.flywheelSystem(
-                kDrivingMotor, ModuleConstants.kDrivingMotorReduction, kDriveMomentOfInertia
-            )
-            self._turnFlywheel = FlywheelSim(turnPlant, kTurningMotor)
-            self._driveFlywheel = FlywheelSim(drivePlant, kDrivingMotor)
-            self._driveSparkSim = _createSim(module._drivingSpark, kDrivingMotor)
-            self._turnSparkSim = _createSim(module._turningSpark, kTurningMotor)
+            self._driveSparkSim = SparkMaxSim(module._drivingSpark, DCMotor.NEO(1))
+            self._turnSparkSim = SparkMaxSim(module._turningSpark, DCMotor.NEO(1))
             self._angularOffset = module._chassisAngularOffset
 
             # Calculates the velocity of the drive motor, simulating inertia and friction
-            self._driveRateLimiter = SlewRateLimiter(kdrivingMotorSimSlew)
+            self._driveRateLimiter = SlewRateLimiter(ModuleConstants.kdrivingMotorSimSlew)
 
             # Calculates the velocity of the turn motor
             self._turnController = PIDController(
-                kturningMotorSimSpeed,
+                ModuleConstants.kturningMotorSimSpeed,
                 0,
-                kturningMotorSimD
+                ModuleConstants.kturningMotorSimD
             )
             self._turnController.enableContinuousInput(-math.pi, math.pi)
 
@@ -81,35 +72,32 @@ class SwerveDriveSim:
             self._turnSparkSim.setPosition(random.uniform(-math.pi, math.pi))
 
         def simulationPeriodic(self, vbus: float, dt: float):
-            voltage = vbus * self._turnSparkSim.getAppliedOutput()
-            self._turnFlywheel.setInput([voltage])
-            self._turnFlywheel.update(dt)
-            velocity = self._turnFlywheel.getAngularVelocity()
-            velocity_rpm = units.radiansPerSecondToRotationsPerMinute(velocity)
-            velocity_final = velocity_rpm #/ self._turnSparkSim.getRelativeEncoderSim().getVelocityConversionFactor()
-            self._turnSparkSim.iterate(
-                velocity_final,
+            # m/s
+            targetVelocity = self._driveSparkSim.getSetpoint()
+            driveVelocity = self._driveRateLimiter.calculate(targetVelocity)
+            self._driveSparkSim.iterate(
+                driveVelocity,
                 vbus,
                 dt
             )
 
-            voltage = vbus * self._driveSparkSim.getAppliedOutput()
-            self._driveFlywheel.setInput([voltage])
-            self._driveFlywheel.update(dt)
-            velocity = self._driveFlywheel.getAngularVelocity()
-            velocity_rpm = units.radiansPerSecondToRotationsPerMinute(velocity)
-            velocity_final = velocity_rpm / self._driveSparkSim.getRelativeEncoderSim().getVelocityConversionFactor()
-            self._driveSparkSim.iterate(
-                velocity_final,
+            # rad
+            targetAngle = self._turnSparkSim.getSetpoint()
+            curAngle = wpimath.angleModulus(self._turnSparkSim.getPosition())
+            self._turnController.setSetpoint(targetAngle)
+            turnVelocity = self._turnController.calculate(curAngle)
+            self._turnSparkSim.iterate(
+                turnVelocity,
                 vbus,
                 dt
             )
 
         def getState(self) -> SwerveModuleState:
             return SwerveModuleState(
-                self._driveSparkSim.getVelocity(),
+                units.meters_per_second(self._driveSparkSim.getVelocity()),
                 Rotation2d(self._turnSparkSim.getPosition() - self._angularOffset)
             )
+    _pose: Pose2d = Pose2d()
 
     def __init__(self, driveSubsystem: Drive):
         self._kinematics = DriveConstants.kDriveKinematics

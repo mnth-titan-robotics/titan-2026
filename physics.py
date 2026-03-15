@@ -27,11 +27,12 @@ from wpilib import RobotController
 from wpilib.simulation import ADIS16470_IMUSim, DCMotorSim, FlywheelSim
 from wpimath.system.plant import DCMotor, LinearSystemId
 from wpimath import units
-from wpimath.geometry import Pose3d, Rotation3d
+from wpimath.geometry import Pose2d, Pose3d, Rotation3d
 from wpimath.interpolation import TimeInterpolatablePose2dBuffer
 
 from robot import Robot
 from robotcontainer import RobotContainer
+from services.localization import Localization
 from services.questnav.questnav_data import PoseFrame
 from services.questnav.questnav_stub import QuestNavStub
 from sim.mecanum_sim import MecanumSim
@@ -40,9 +41,10 @@ from subsystems.launcher import Launcher
 
 
 class QuestNavSim:
-    def __init__(self, physics_controller: PhysicsInterface, questnav: QuestNavStub):
+    def __init__(self, physics_controller: PhysicsInterface, localization: Localization):
+        self._localization = localization
         self.field = physics_controller.field
-        self._questnav = questnav
+        self._questnav = localization._questnav
         self._poseBuffer = TimeInterpolatablePose2dBuffer(1.0)
         self.frame_number = 1
 
@@ -54,7 +56,7 @@ class QuestNavSim:
         t -= latency
         delayed_pose = self._poseBuffer.sample(t)
         rotation3d = Rotation3d(units.radians(0.0), units.radians(0.0), delayed_pose.rotation().radians())
-        pose3d = Pose3d(delayed_pose.x, delayed_pose.y, 0.0, rotation3d)
+        pose3d = Pose3d(delayed_pose.x, delayed_pose.y, 0.0, rotation3d) + self._localization._questnavToRobot.inverse()
         self.frame_number += 1
         self._questnav.unread_frames.append(PoseFrame(pose3d, t, t, self.frame_number))
 
@@ -63,7 +65,8 @@ class PhysicsEngine:
         self._robot = robot
         self._container: RobotContainer = robot.container
         self.physics_controller = physics_controller
-        self._questNavSim = QuestNavSim(physics_controller, robot.container.localization._questnav)
+        self.physics_controller.field.getRobotObject().setPose(Pose2d())
+        self._questNavSim = QuestNavSim(physics_controller, robot.container.localization)
         self._driveSim = SwerveDriveSim(robot.container.drive)
         # self._driveSim = MecanumSim(robot.container.drive)
         self._gyroSim = ADIS16470_IMUSim(robot.container.drive._gyro)
@@ -76,8 +79,8 @@ class PhysicsEngine:
             pose = self.physics_controller.get_pose()
 
             # Update the gyro sim
-            # BUG: degrees() is returning radians for some reason. Things are weird.
+            # ADIS is mounted upside-down, invert rotation
             rot = pose.rotation().degrees()
-            self._gyroSim.setGyroAngleZ(rot)
+            self._gyroSim.setGyroAngleZ(-rot)
         else:
             pass

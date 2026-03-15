@@ -105,3 +105,6 @@ class Game:
             self._robot.intake.intake(),
             self._robot.indexer.feed()
         )
+
+    def toggleLockOnHub(self) -> Command:
+        return self._robot.drive.toggle_lock_command(constants.FieldConstants.kHubPose)

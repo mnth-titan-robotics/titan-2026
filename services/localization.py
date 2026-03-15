@@ -1,4 +1,5 @@
-﻿from wpimath.geometry import Pose2d, Pose3d, Transform3d, Translation3d, Rotation3d
+﻿from wpilib import RobotBase
+from wpimath.geometry import Pose2d, Pose3d, Transform3d, Translation3d, Rotation3d
 from wpimath.kinematics import ChassisSpeeds
 from .questnav import QuestNav
 from lib import utils
@@ -15,6 +16,7 @@ class Localization:
         utils.addRobotPeriodic(self.update)
         self.nt_instance = ntcore.NetworkTableInstance.getDefault()
         self._posePublisher = self.nt_instance.getTable("Localization").getStructTopic("Pose3d", Pose3d).publish()
+        self._posePublisher.set(Pose3d())
         self._velocityPublisher = self.nt_instance.getTable("Localization").getStructTopic("ChassisSpeeds", ChassisSpeeds).publish()
         self._robotToQuestnav = Transform3d(
             Translation3d(units.inchesToMeters(-9.0), units.inchesToMeters(13.5), units.inchesToMeters(14.125)),
@@ -30,21 +32,20 @@ class Localization:
             return
 
         pose_frame = pose_frames[-1]
-        # print(f"pose_frame: data_timestamp={pose_frame.data_timestamp:.3f}, app_timestamp={pose_frame.app_timestamp:.3f}, frame_count={pose_frame.frame_count}")
-        prev_frame = self._prev_frame
+        prev_pose = self._pose
         # Store the frame for the next update
         self._pose = pose_frame.quest_pose_3d + self._questnavToRobot
         self._posePublisher.set(self._pose)
-        self._prev_frame = pose_frame
         if len(pose_frames) > 1:
             prev_frame = pose_frames[-2]
-            self._prev_frame = pose_frame
-        elif prev_frame is None:
-            return
+            prev_pose = prev_frame.quest_pose_3d + self._questnavToRobot
+            dt = pose_frame.data_timestamp - prev_frame.data_timestamp
+        else:
+            dt = 0.02
 
         # Compute the velocity between the two frames
-        delta = self._pose - prev_frame.quest_pose_3d
-        dt = pose_frame.data_timestamp - prev_frame.data_timestamp
+        delta = self._pose - prev_pose
+        
         if dt <= 0.001:
             return
         
@@ -66,7 +67,17 @@ class Localization:
             pose.translation().y,
             self._pose.z,
             Rotation3d(0, 0, pose.rotation().radians()))
-        self._questnav.set_pose(pose3d + self._questnavToRobot.inverse())
+        if RobotBase.isSimulation():
+            self._pose = pose3d
+            self._posePublisher.set(self._pose)
+        else:
+            self._questnav.set_pose(pose3d + self._questnavToRobot.inverse())
 
     def get_velocity(self) -> ChassisSpeeds:
         return self._velocity
+
+    def get_projected_pose2d(self, dt: float) -> Pose2d:
+        cur_pose = self._pose.toPose2d()
+        velocity = self._velocity
+        twist = velocity.toTwist2d(dt)
+        return cur_pose.exp(twist)

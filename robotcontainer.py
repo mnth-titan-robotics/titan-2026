@@ -116,7 +116,7 @@ class RobotContainer:
         # self._driverController.a().whileTrue(cmd.none())
         # self._driverController.b().whileTrue(cmd.none())
         # self._driverController.y().whileTrue(cmd.none())
-        # self._driverController.x().whileTrue(cmd.none())
+        self._driverController.x().onTrue(self.game.toggleLockOnHub())
         self._driverController.start().onTrue(self.drive.toggle_field_relative_command())
         self._driverController.back().onTrue(self.game.driverResetCommand())
 
@@ -133,7 +133,7 @@ class RobotContainer:
         self._operatorController.povDown().whileTrue(self.intakeExtender.retract())
         # self._operatorController.povLeft().whileTrue(cmd.none())
         # self._operatorController.povRight().whileTrue(cmd.none())
-        self._operatorController.a().whileTrue(self.game.runIndexerCommand())
+        self._operatorController.a().whileTrue(self.indexer.feed())
         # self._operatorController.b().whileTrue(cmd.none())
         # self._operatorController.y().whileTrue(cmd.none())
         # self._operatorController.x().whileTrue(cmd.none())

@@ -11,6 +11,12 @@ class Launcher(Subsystem):
     """Controls the launcher mechanism for firing projectiles."""
 
     Constants = constants.Subsystems.Launcher()
+    # 3200 RPM - 9'  6" 1.26s
+    # 3500 RPM - 
+    #   12' 2" 1.32s
+    #   14' 6" 1.51s
+    #   
+    #
 
     def __init__(self):
         self.nt_instance = ntcore.NetworkTableInstance.getDefault()
@@ -39,10 +45,13 @@ class Launcher(Subsystem):
         spark_config.voltageCompensation(self.Constants.MotorVComp)
         spark_config.closedLoop \
             .setFeedbackSensor(rev.FeedbackSensor.kPrimaryEncoder) \
-            .pidf(0.33, 0.0, 0.0, 0.25)
+            .pidf(0.33, 0.0, 0.0, 0.3)
+        # 1:1000 1k RPM
+        # 1:1.5 gear reduction
+        gear_reduction = 1.0 / 1000.0 / 1.5
         spark_config.encoder \
-            .positionConversionFactor(.001) \
-            .velocityConversionFactor(.001)
+            .positionConversionFactor(gear_reduction) \
+            .velocityConversionFactor(gear_reduction)
         self._leftMotor.configure(spark_config, rev.ResetMode.kResetSafeParameters, rev.PersistMode.kPersistParameters)
         spark_config.follow(self.Constants.LeftMotorId, True)
         self._rightMotor.configure(spark_config, rev.ResetMode.kResetSafeParameters, rev.PersistMode.kPersistParameters)
