@@ -1,6 +1,9 @@
 {
   "HALProvider": {
     "Addressable LEDs": {
+      "0": {
+        "columns": 151
+      },
       "window": {
         "visible": true
       }
@@ -42,5 +45,8 @@
   },
   "NetworkTables Info": {
     "visible": true
+  },
+  "NetworkTables View": {
+    "visible": false
   }
 }
