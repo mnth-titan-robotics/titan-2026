@@ -9,4 +9,5 @@ import constants
 from .drive import Drive
 from .max_swerve_module import MAXSwerveModule
 from .indexer import Indexer
+from .lights import LEDSubsystem
 DriveConstants=constants.Subsystems.Drive

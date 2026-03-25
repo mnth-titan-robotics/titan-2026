@@ -1,15 +1,8 @@
 {
   "HALProvider": {
-    "Other Devices": {
-      "ADIS16470[0]": {
-        "header": {
-          "open": true
-        }
-      },
-      "SPARK MAX [20]": {
-        "header": {
-          "open": true
-        }
+    "Addressable LEDs": {
+      "window": {
+        "visible": true
       }
     }
   },
