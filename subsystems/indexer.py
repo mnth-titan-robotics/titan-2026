@@ -2,6 +2,7 @@ import rev
 from commands2 import Subsystem, Command
 import ntcore
 import constants
+from configs import Configs
 
 class Indexer(Subsystem):
     Constants = constants.Subsystems.Indexer
@@ -10,11 +11,10 @@ class Indexer(Subsystem):
         self._speed_entry = self.nt_instance.getFloatTopic("Subsystems/Indexer/Indexer_Speed").getEntry(self.Constants.IndexerSpeed)
         self._speed_entry.setDefault(self.Constants.IndexerSpeed)
         self._motor = rev.SparkMax(self.Constants.MotorId,rev.SparkBase.MotorType.kBrushless)
-        spark_config = rev.SparkMaxConfig()
-        spark_config.inverted(True)
-        spark_config.smartCurrentLimit(self.Constants.MotorCurrentLimit)
-        spark_config.voltageCompensation(self.Constants.MotorVComp)
-        self._motor.configure(spark_config, rev.ResetMode.kResetSafeParameters, rev.PersistMode.kPersistParameters)
+        self._motor.configure(
+            Configs.Indexer.kConfig, 
+            rev.ResetMode.kResetSafeParameters, 
+            rev.PersistMode.kPersistParameters)
 
     def stop(self) -> Command:
         """Stops all motors"""

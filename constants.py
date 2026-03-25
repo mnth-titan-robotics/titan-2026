@@ -141,7 +141,10 @@ class Subsystems:
         # Minimum speed in RPM required for the launcher to reliably fire projectiles
         MinLaunchSpeed = 3.1
         LauncherPID = PID(0.7, 0.001, 0.6)
-      
+        # 1:1000 1k RPM
+        # 1:1.5 gear reduction
+        PositionConversionFactor = 1.0 / 1000.0 / 1.5
+        VelocityConversionFactor = PositionConversionFactor
 
     class Intake:
         MotorId = 12

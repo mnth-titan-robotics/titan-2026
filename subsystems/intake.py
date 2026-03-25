@@ -3,48 +3,44 @@ from commands2 import Subsystem, Command
 import ntcore
 from wpilib import RobotBase, RobotController
 from wpimath import units
+from configs import Configs
 
 import constants
+
 
 class IntakeExtender(Subsystem):
     Constants = constants.Subsystems.IntakeExtender
     _targetPosition: float = 0
-    
+
     def __init__(self):
         self.nt_instance = ntcore.NetworkTableInstance.getDefault()
         topicKey = "Subsystems/Intake"
-        self._reverse_limit_entry = self.nt_instance.getFloatTopic(f"{topicKey}/Extender_ReverseLimit").getEntry(self.Constants.ReverseLimit)
-        self._forward_limit_entry = self.nt_instance.getFloatTopic(f"{topicKey}/Extender_ForwardLimit").getEntry(self.Constants.ForwardLimit)
+        self._reverse_limit_entry = self.nt_instance.getFloatTopic(
+            f"{topicKey}/Extender_ReverseLimit").getEntry(self.Constants.ReverseLimit)
+        self._forward_limit_entry = self.nt_instance.getFloatTopic(
+            f"{topicKey}/Extender_ForwardLimit").getEntry(self.Constants.ForwardLimit)
         self._pos_publisher = self.nt_instance.getFloatTopic(f"{topicKey}/Extender_Pos").publish()
         self._reverse_limit_entry.setDefault(self.Constants.ReverseLimit)
         self._forward_limit_entry.setDefault(self.Constants.ForwardLimit)
 
-        self._leftMotor = rev.SparkMax(self.Constants.LeftMotorId,rev.SparkBase.MotorType.kBrushless)
-        self._rightMotor = rev.SparkMax(self.Constants.RightMotorId,rev.SparkBase.MotorType.kBrushless)
-    
+        self._leftMotor = rev.SparkMax(self.Constants.LeftMotorId, rev.SparkBase.MotorType.kBrushless)
+        self._rightMotor = rev.SparkMax(self.Constants.RightMotorId, rev.SparkBase.MotorType.kBrushless)
+
         # Create motor config
-        spark_config = rev.SparkMaxConfig()
-        spark_config.inverted(True)
-        spark_config.smartCurrentLimit(self.Constants.MotorCurrentLimit)
-        spark_config.closedLoop \
-            .pid(*self.Constants.PID)
-        spark_config.closedLoop.maxMotion \
-            .cruiseVelocity(self.Constants.MotorSpeed) \
-            .maxAcceleration(self.Constants.MaxAcceleration) \
-            .allowedProfileError(self.Constants.AllowedProfileError)
-        spark_config.encoder \
-            .positionConversionFactor(self.Constants.GearReduction) \
-            .velocityConversionFactor(self.Constants.GearReduction / 60.0)
         self._closedLoopController = self._leftMotor.getClosedLoopController()
         self.encoder = self._leftMotor.getEncoder()
         self.encoder.setPosition(0)
-        spark_config.voltageCompensation(self.Constants.MotorVComp)
         # Configure Leader
-        self._leftMotor.configure(spark_config, rev.ResetMode.kResetSafeParameters, rev.PersistMode.kPersistParameters)
+        self._leftMotor.configure(
+            Configs.IntakeExtender.kLeftConfig,
+            rev.ResetMode.kResetSafeParameters,
+            rev.PersistMode.kPersistParameters)
 
         # Configure Follower
-        spark_config.follow(self.Constants.LeftMotorId,True)
-        self._rightMotor.configure(spark_config, rev.ResetMode.kResetSafeParameters, rev.PersistMode.kPersistParameters)
+        self._rightMotor.configure(
+            Configs.IntakeExtender.kRightConfig,
+            rev.ResetMode.kResetSafeParameters,
+            rev.PersistMode.kPersistParameters)
         self.encoder.setPosition(0)
 
         if not RobotBase.isReal():
@@ -88,10 +84,10 @@ class IntakeExtender(Subsystem):
             vbus,
             dt
         )
-    
+
     def resetEncoder(self) -> None:
         self.encoder.setPosition(0)
-    
+
     def stop(self) -> Command:
         self._targetPosition = self._forward_limit_entry.get()
 
@@ -100,7 +96,7 @@ class IntakeExtender(Subsystem):
             self._leftMotor.set(0.0)
 
         return self.run(command_function).withName("IntakeStop")
-    
+
     def extend(self) -> Command:
         """Extends the intake mechanism."""
         self._targetPosition = self._forward_limit_entry.get()
@@ -121,6 +117,7 @@ class IntakeExtender(Subsystem):
 
         return self.run(command_function).withName("IntakeRetract")
 
+
 class Intake(Subsystem):
     """Controls the intake mechanism for collecting game pieces."""
 
@@ -128,15 +125,18 @@ class Intake(Subsystem):
 
     def __init__(self):
         self.nt_instance = ntcore.NetworkTableInstance.getDefault()
-        self._speed_entry = self.nt_instance.getFloatTopic("Subsystems/Intake/Intake_Speed").getEntry(self.Constants.IntakeSpeed)
+        self._speed_entry = self.nt_instance.getFloatTopic(
+            "Subsystems/Intake/Intake_Speed").getEntry(self.Constants.IntakeSpeed)
         self._speed_entry.setDefault(self.Constants.IntakeSpeed)
         self._motor = rev.SparkMax(
             self.Constants.MotorId,
             rev.SparkBase.MotorType.kBrushless
         )
         self._motor.setCANTimeout(250)
-        spark_config = rev.SparkMaxConfig()
-        self._motor.configure(spark_config, rev.ResetMode.kResetSafeParameters, rev.PersistMode.kPersistParameters)
+        self._motor.configure(
+            Configs.Intake.kConfig,
+            rev.ResetMode.kResetSafeParameters,
+            rev.PersistMode.kPersistParameters)
 
         if not RobotBase.isReal():
             from wpilib.simulation import FlywheelSim
@@ -186,5 +186,3 @@ class Intake(Subsystem):
             self._motor.set(0)
 
         return self.run(command_function).withName("IntakeStop")
-
-    
