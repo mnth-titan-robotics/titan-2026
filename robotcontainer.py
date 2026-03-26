@@ -7,7 +7,8 @@
 import enum
 import commands2
 import constants
-from subsystems import Drive, Launcher, Intake, IntakeExtender, Indexer, LEDSubsystem
+from subsystems import Drive, Launcher, Intake, IntakeExtender, Indexer
+from subsystems.lights import LEDSubsystem
 from commands.auto import Auto
 from commands.game import Game
 from services import Tracker, TrackerConstants, Localization
@@ -114,7 +115,8 @@ class RobotContainer:
         # self._driverController.povRight().whileTrue(cmd.none())
         # self._driverController.a().whileTrue(cmd.none())
         # self._driverController.b().whileTrue(cmd.none())
-        # self._driverController.y().whileTrue(cmd.none())
+        #   UNTESTED PLEASE DON'T TRY TS WITHOUT TESTING
+        self._driverController.y().whileTrue(self.game.agitateRobotCommand())
         self._driverController.x().onTrue(self.game.toggleLockOnHub())
         self._driverController.start().onTrue(self.drive.toggle_field_relative_command())
         self._driverController.back().onTrue(self.game.driverResetCommand())
@@ -136,7 +138,11 @@ class RobotContainer:
         self._operatorController.b().whileTrue(self.indexer.reverse())
         # self._operatorController.y().whileTrue(cmd.none())
         # self._operatorController.x().whileTrue(cmd.none())
-        # self._operatorController.start().whileTrue(cmd.none())
+        self._operatorController.start().whileTrue(
+            cmd.parallel(
+                self.launcher.start(),
+                self.game.agitate_and_shoot()
+            ))
         self._operatorController.back().whileTrue(self.game.operatorResetCommand())
 
     def getAutonomousCommand(self) -> commands2.Command:

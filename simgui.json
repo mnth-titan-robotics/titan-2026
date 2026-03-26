@@ -1,8 +1,23 @@
 {
   "HALProvider": {
     "Addressable LEDs": {
+      "0": {
+        "columns": 141
+      },
       "window": {
         "visible": true
+      }
+    },
+    "Other Devices": {
+      "SPARK MAX [5]": {
+        "header": {
+          "open": true
+        }
+      },
+      "SPARK MAX [5] ABSOLUTE ENCODER": {
+        "header": {
+          "open": true
+        }
       }
     }
   },

@@ -2,9 +2,11 @@
 from typing import TYPE_CHECKING, Callable
 
 from commands2 import Command, cmd
+from commands2 import Command, cmd
 from wpimath.controller import HolonomicDriveController, PIDController, ProfiledPIDControllerRadians
 from wpimath.geometry import Pose2d, Rotation2d
 from wpimath.trajectory import Trajectory, TrapezoidProfileRadians
+from wpimath import units
 from wpimath import units
 
 import constants
@@ -101,6 +103,22 @@ class Game:
             self._robot.intakeExtender.extend().withTimeout(SHAKE_TIME),
             cmd.waitSeconds(PAUSE_TIME)
         )
+    
+    def agitateRobotCommand(self) -> Command:
+        SHAKE_SPEED = 0.5
+        SHAKE_TIME = 0.06
+        return cmd.repeatingSequence(
+            self._robot.drive.drive_joystick_command(
+                lambda: SHAKE_SPEED,
+                lambda: 0.0,
+                lambda: 0.0
+            ).withTimeout(SHAKE_TIME),
+            self._robot.drive.drive_joystick_command(
+                lambda: -SHAKE_SPEED,
+                lambda: 0.0,
+                lambda: 0.0
+            ).withTimeout(SHAKE_TIME)
+        )
 
     def pulseIndexerCommand(self) -> Command:
         FEED_TIME = units.seconds(0.2)
@@ -117,6 +135,16 @@ class Game:
             self._robot.intake.intake(),
             self.pulseIndexerCommand()
         )
+    
+    def agitate_and_shoot(self):
+        return cmd.none() \
+            .until(self._robot.launcher.at_speed) \
+            .andThen(cmd.parallel(
+                self._robot.indexer.feed(),
+                self._robot.intake.intake_half_speed(),
+                self.shakeIntakeCommand()
+                )
+            )
 
     def toggleLockOnHub(self) -> Command:
         return self._robot.drive.toggle_lock_command(constants.FieldConstants.kHubPose)
