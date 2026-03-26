@@ -25,10 +25,12 @@ class Configs:
         # ============================
         # Left Motor Config
         # ============================
-        kLeftConfig: SparkBaseConfig = SparkMaxConfig().inverted(True) \
+        kLeftConfig: SparkBaseConfig = SparkMaxConfig().inverted(False) \
+            .setIdleMode(SparkBaseConfig.IdleMode.kBrake) \
             .voltageCompensation(Subsystems.IntakeExtender.MotorVComp)
         kLeftConfig.smartCurrentLimit(Subsystems.IntakeExtender.MotorCurrentLimit)
         kLeftConfig.closedLoop \
+            .setFeedbackSensor(FeedbackSensor.kPrimaryEncoder) \
             .pid(*Subsystems.IntakeExtender.PID)
         kLeftConfig.closedLoop.maxMotion \
             .cruiseVelocity(Subsystems.IntakeExtender.MotorSpeed) \
@@ -42,6 +44,7 @@ class Configs:
         # Right Motor Config
         # ============================
         kRightConfig: SparkBaseConfig = SparkMaxConfig().apply(kLeftConfig) \
+            .inverted(False) \
             .follow(Subsystems.IntakeExtender.LeftMotorId, True)
 
     class Launcher:

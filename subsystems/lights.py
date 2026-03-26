@@ -1,6 +1,5 @@
-from wpilib import AddressableLED, RobotBase
+from wpilib import AddressableLED, RobotBase, Color
 from commands2 import Subsystem
-
 
 ColorOrder = AddressableLED.ColorOrder
 LEDData = AddressableLED.LEDData
@@ -17,7 +16,7 @@ class LEDSubsystem(Subsystem):
         # Class-wide Variables
         self.ACTIVE_LED = 0
 
-        self.LED_STRIP_LENGTH = 151
+        self.LED_STRIP_LENGTH = 35
         self.LED_OBJECT = AddressableLED(LED_PORT_0)
         self.LED_DATA_LIST = list(LEDData() for i in range(self.LED_STRIP_LENGTH))
 

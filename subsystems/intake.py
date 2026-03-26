@@ -1,5 +1,5 @@
 import rev
-from commands2 import Subsystem, Command
+from commands2 import Subsystem, Command, cmd
 import ntcore
 from wpilib import RobotBase, RobotController
 from wpimath import units
@@ -27,9 +27,7 @@ class IntakeExtender(Subsystem):
         self._rightMotor = rev.SparkMax(self.Constants.RightMotorId, rev.SparkBase.MotorType.kBrushless)
 
         # Create motor config
-        self._closedLoopController = self._leftMotor.getClosedLoopController()
-        self.encoder = self._leftMotor.getEncoder()
-        self.encoder.setPosition(0)
+        self._controller = self._leftMotor.getClosedLoopController()
         # Configure Leader
         self._leftMotor.configure(
             Configs.IntakeExtender.kLeftConfig,
@@ -41,6 +39,8 @@ class IntakeExtender(Subsystem):
             Configs.IntakeExtender.kRightConfig,
             rev.ResetMode.kResetSafeParameters,
             rev.PersistMode.kPersistParameters)
+        
+        self.encoder = self._leftMotor.getEncoder()
         self.encoder.setPosition(0)
 
         if not RobotBase.isReal():
@@ -89,33 +89,38 @@ class IntakeExtender(Subsystem):
         self.encoder.setPosition(0)
 
     def stop(self) -> Command:
-        self._targetPosition = self._forward_limit_entry.get()
-
         def command_function():
-            # self._closedLoopController.setReference(self._targetPosition, rev.SparkBase.ControlType.kMAXMotionPositionControl)
             self._leftMotor.set(0.0)
 
         return self.run(command_function).withName("IntakeStop")
 
     def extend(self) -> Command:
         """Extends the intake mechanism."""
-        self._targetPosition = self._forward_limit_entry.get()
-
         def command_function():
-            # self._closedLoopController.setReference(self._targetPosition, rev.SparkBase.ControlType.kMAXMotionPositionControl)
             self._leftMotor.set(0.3)
 
         return self.run(command_function).withName("IntakeExtend")
 
     def retract(self) -> Command:
         """Retracts the intake mechanism."""
-        self._targetPosition = self._reverse_limit_entry.get()
-
         def command_function():
-            # self._closedLoopController.setReference(self._targetPosition, rev.SparkBase.ControlType.kMAXMotionPositionControl)
             self._leftMotor.set(-0.3)
 
         return self.run(command_function).withName("IntakeRetract")
+
+    def auto_extend(self) -> Command:
+        """Extends the intake mechanism."""
+        def command_function():
+            self._controller.setSetpoint(self.Constants.ExtendPosition, rev.SparkLowLevel.ControlType.kPosition)
+
+        return self.run(command_function).withName("IntakeAutoExtend")
+
+    def auto_retract(self) -> Command:
+        """Retracts the intake mechanism."""
+        def command_function():
+            self._controller.setSetpoint(self.Constants.RetractPosition, rev.SparkLowLevel.ControlType.kPosition)
+
+        return self.run(command_function).withName("IntakeAutoRetract")
 
 
 class Intake(Subsystem):

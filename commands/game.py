@@ -94,16 +94,28 @@ class Game:
     
     def shakeIntakeCommand(self) -> Command:
         SHAKE_TIME = units.seconds(0.1)
+        PAUSE_TIME = units.seconds(0.1)
         return cmd.repeatingSequence(
             self._robot.intakeExtender.retract().withTimeout(SHAKE_TIME),
+            cmd.waitSeconds(PAUSE_TIME),
             self._robot.intakeExtender.extend().withTimeout(SHAKE_TIME),
+            cmd.waitSeconds(PAUSE_TIME)
+        )
+
+    def pulseIndexerCommand(self) -> Command:
+        FEED_TIME = units.seconds(0.2)
+        STOP_TIME = units.seconds(0.04)
+
+        return cmd.repeatingSequence(
+            self._robot.indexer.feed().withTimeout(FEED_TIME),
+            self._robot.indexer.stop().withTimeout(STOP_TIME)
         )
 
     def runIndexerCommand(self) -> Command:
         return cmd.parallel(
             self.shakeIntakeCommand(),
             self._robot.intake.intake(),
-            self._robot.indexer.feed()
+            self.pulseIndexerCommand()
         )
 
     def toggleLockOnHub(self) -> Command:

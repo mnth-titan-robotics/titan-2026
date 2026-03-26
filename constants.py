@@ -134,12 +134,13 @@ class Subsystems:
     class Launcher:
         MotorCurrentLimit = 60
         MotorVComp = 12
-        LaunchSpeed = 4.0
+        LaunchSpeed = 3.8
         IdleSpeed = 0.2
         LeftMotorId = 20
         RightMotorId = 21
         # Minimum speed in RPM required for the launcher to reliably fire projectiles
-        MinLaunchSpeed = 3.1
+        MinLaunchSpeed = 3.0
+        DistanceToSpeedLookup = { units.meters(2.75): 3.0, units.meters(5.5): 3.82 }
         LauncherPID = PID(0.7, 0.001, 0.6)
         # 1:1000 1k RPM
         # 1:1.5 gear reduction
@@ -156,17 +157,21 @@ class Subsystems:
     class IntakeExtender:
         LeftMotorId = 10
         RightMotorId = 11
-        GearReduction = 4.0 * 3.0 * 4.0 * 64.0 / 26.0
+        # 4:1, 3:1, 4:1 MAXPlanetary with 64t/26t pulleys
+        GearReduction = 1.0 / 4.0 / 3.0 / 4.0 / (64.0 / 26.0)
         MotorCurrentLimit = 25
         MotorVComp = 12
-        MotorSpeed = 0.5
         MaxAcceleration = 0.5
         AllowedProfileError = 0.01
+        MotorSpeed = 0.5
         ReverseSpeed = -0.5
-        ForwardLimit = 1.0
-        ReverseLimit = -1.0
-        PID = (0.1, 0.0, 0.01)
-        OutputRange = (0, 0.1)
+
+        ForwardLimit = 90.0
+        ReverseLimit = -90.0
+        RetractPosition = 0.0
+        FlapPosition = 0.2
+        ExtendPosition = 0.28
+        PID = (0.05, 0.0, 0.01)
     
     class Indexer:
         MotorId = 16

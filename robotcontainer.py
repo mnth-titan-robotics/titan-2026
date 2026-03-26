@@ -102,8 +102,6 @@ class RobotContainer:
         # ==========================================
         def invert_left():
             self.invertLeft *= -1.0
-        def invert_right():
-            self.invertRight *= -1.0
         # self._driverController.rightStick().whileTrue(cmd.runOnce(invert_right))
         self._driverController.leftStick().whileTrue(cmd.runOnce(invert_left))
         # self._driverController.leftTrigger().whileTrue(cmd.none())
@@ -132,10 +130,10 @@ class RobotContainer:
         self._operatorController.leftBumper().whileTrue(self.intake.reverse())
         self._operatorController.povUp().whileTrue(self.intakeExtender.extend())
         self._operatorController.povDown().whileTrue(self.intakeExtender.retract())
-        # self._operatorController.povLeft().whileTrue(cmd.none())
-        # self._operatorController.povRight().whileTrue(cmd.none())
-        self._operatorController.a().whileTrue(self.indexer.feed())
-        # self._operatorController.b().whileTrue(cmd.none())
+        self._operatorController.povLeft().whileTrue(self.intakeExtender.auto_retract())
+        self._operatorController.povRight().whileTrue(self.intakeExtender.auto_extend())
+        self._operatorController.a().whileTrue(self.game.pulseIndexerCommand())
+        self._operatorController.b().whileTrue(self.indexer.reverse())
         # self._operatorController.y().whileTrue(cmd.none())
         # self._operatorController.x().whileTrue(cmd.none())
         # self._operatorController.start().whileTrue(cmd.none())
