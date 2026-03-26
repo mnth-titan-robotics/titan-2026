@@ -7,7 +7,6 @@
 from rev import SparkMax, SparkBase, ResetMode, PersistMode
 from wpimath.geometry import Rotation2d
 from wpimath.kinematics import SwerveModulePosition, SwerveModuleState
-
 from configs import Configs
 
 

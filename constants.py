@@ -3,13 +3,18 @@ import math
 
 from pathplannerlib.config import RobotConfig, PIDConstants
 from wpimath import units
-from wpimath.geometry import Translation2d
+from wpimath.geometry import Translation2d, Pose2d, Rotation2d
 from wpimath.kinematics import SwerveDrive4Kinematics, MecanumDriveKinematics
 from wpimath.trajectory import TrapezoidProfile
 
 from lib.classes import MotorControllerType, DifferentialModuleConstants, DifferentialModuleConfig, DriftCorrectionConstants, PID, Tolerance
 from lib.enums import ModuleLocation
 
+class FieldConstants:
+    kHubPose = Pose2d(Translation2d(4.5, 4.025), Rotation2d())
+    kLeftPass = Pose2d(Translation2d(2.75, 6.25), Rotation2d())
+    kRightPass = Pose2d(Translation2d(2.75, 1.5), Rotation2d())
+ENABLE_TELEMETRY = False
 
 class Controllers:
     DriverPort = 0
@@ -88,6 +93,7 @@ class Subsystems:
         kMaxSpeedMetersPerSecond: float = 12
         kMaxAngularSpeed: float = 2.0 * math.pi
         kMaxAcceleration: float = 1.0  # meters per second squared
+        kTurnLatency: float = 0.06 # Delay between a commanded turn and when we can expect to reach the setpoint
 
         TranslationPID = PID(P=1.5, I=0.0, D=0.1)
         RotationPID = PID(P=1.0, I=0.0, D=0.1)
@@ -107,48 +113,52 @@ class Subsystems:
         )
 
          # Angular offsets of the modules relative to the chassis in radians
-        kFrontLeftChassisAngularOffset = -math.pi / 2
-        kFrontRightChassisAngularOffset = 0
-        kRearLeftChassisAngularOffset = math.pi
-        kRearRightChassisAngularOffset = math.pi / 2
+        kFrontLeftChassisAngularOffset = math.pi / 2
+        kFrontRightChassisAngularOffset = math.pi
+        kRearLeftChassisAngularOffset = 0.0
+        kRearRightChassisAngularOffset = -math.pi / 2
 
         # SPARK MAX CAN IDs
-        kFrontLeftDrivingCanId: int = 5
-        kRearLeftDrivingCanId: int = 3
-        kFrontRightDrivingCanId: int = 7
-        kRearRightDrivingCanId: int = 1
+        kFrontLeftDrivingCanId: int = 1
+        kRearLeftDrivingCanId: int = 7
+        kFrontRightDrivingCanId: int = 3
+        kRearRightDrivingCanId: int = 5
 
-        kFrontLeftTurningCanId: int = 6
-        kRearLeftTurningCanId: int = 4
-        kFrontRightTurningCanId: int = 8
-        kRearRightTurningCanId: int = 2
+        kFrontLeftTurningCanId: int = 2
+        kRearLeftTurningCanId: int = 8
+        kFrontRightTurningCanId: int = 4
+        kRearRightTurningCanId: int = 6
 
         kGyroReversed: bool = False
 
     class Launcher:
-        MotorCurrentLimit = 40
+        MotorCurrentLimit = 60
         MotorVComp = 12
-        LaunchSpeed = -1.0
-        IdleSpeed = -0.2
+        LaunchSpeed = 4.0
+        IdleSpeed = 0.2
         LeftMotorId = 20
         RightMotorId = 21
         # Minimum speed in RPM required for the launcher to reliably fire projectiles
-        MinLaunchSpeed = -4000
-      
+        MinLaunchSpeed = 3.1
+        LauncherPID = PID(0.7, 0.001, 0.6)
+        # 1:1000 1k RPM
+        # 1:1.5 gear reduction
+        PositionConversionFactor = 1.0 / 1000.0 / 1.5
+        VelocityConversionFactor = PositionConversionFactor
 
     class Intake:
         MotorId = 12
         MotorCurrentLimit = 25
-        MotorVComp = 10
+        MotorVComp = 12
         IntakeSpeed = 0.8
         ReverseSpeed = -0.5
 
     class IntakeExtender:
         LeftMotorId = 10
         RightMotorId = 11
-        GearReduction = 4.0 * 3.0 * 4.0
+        GearReduction = 4.0 * 3.0 * 4.0 * 64.0 / 26.0
         MotorCurrentLimit = 25
-        MotorVComp = 10
+        MotorVComp = 12
         MotorSpeed = 0.5
         MaxAcceleration = 0.5
         AllowedProfileError = 0.01
@@ -161,7 +171,7 @@ class Subsystems:
     class Indexer:
         MotorId = 16
         MotorCurrentLimit = 25
-        MotorVComp = 10
+        MotorVComp = 12
         IndexerSpeed = 0.9
         ReverseSpeed = -0.5
 

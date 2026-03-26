@@ -1,10 +1,11 @@
 ﻿import math
 from typing import TYPE_CHECKING, Callable
 
-from commands2 import Command
+from commands2 import Command, cmd
 from wpimath.controller import HolonomicDriveController, PIDController, ProfiledPIDControllerRadians
 from wpimath.geometry import Pose2d, Rotation2d
 from wpimath.trajectory import Trajectory, TrapezoidProfileRadians
+from wpimath import units
 
 import constants
 from lib.differential_module import DifferentialControllerCommand
@@ -80,3 +81,30 @@ class Game:
             outputModuleStates=driveSubsystem._set_wheel_speeds,
             requirements=(driveSubsystem)
         )
+
+    def driverResetCommand(self) -> Command:
+        return cmd.parallel(
+            cmd.runOnce(self._robot.drive.zeroHeading)
+        )
+
+    def operatorResetCommand(self) -> Command:
+        return cmd.parallel(
+            cmd.runOnce(self._robot.intakeExtender.resetEncoder)
+        )
+    
+    def shakeIntakeCommand(self) -> Command:
+        SHAKE_TIME = units.seconds(0.1)
+        return cmd.repeatingSequence(
+            self._robot.intakeExtender.retract().withTimeout(SHAKE_TIME),
+            self._robot.intakeExtender.extend().withTimeout(SHAKE_TIME),
+        )
+
+    def runIndexerCommand(self) -> Command:
+        return cmd.parallel(
+            self.shakeIntakeCommand(),
+            self._robot.intake.intake(),
+            self._robot.indexer.feed()
+        )
+
+    def toggleLockOnHub(self) -> Command:
+        return self._robot.drive.toggle_lock_command(constants.FieldConstants.kHubPose)

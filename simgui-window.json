@@ -23,18 +23,23 @@
     },
     "###/SmartDashboard/Robot/Auto": {
       "Collapsed": "0",
-      "Pos": "473,756",
+      "Pos": "1591,57",
       "Size": "307,60"
+    },
+    "###Addressable LEDs": {
+      "Collapsed": "0",
+      "Pos": "3,715",
+      "Size": "1896,220"
     },
     "###FMS": {
       "Collapsed": "0",
-      "Pos": "7,810",
-      "Size": "202,214"
+      "Pos": "1560,184",
+      "Size": "336,158"
     },
     "###Joysticks": {
       "Collapsed": "0",
       "Pos": "14,980",
-      "Size": "976,278"
+      "Size": "976,82"
     },
     "###NetworkTables": {
       "Collapsed": "0",
@@ -58,7 +63,7 @@
     },
     "###System Joysticks": {
       "Collapsed": "0",
-      "Pos": "7,525",
+      "Pos": "5,407",
       "Size": "232,254"
     },
     "###Timing": {
