@@ -4,6 +4,7 @@ from commands2 import Subsystem
 from .led_things.led_pattern import LEDPattern
 from .led_things.chaser_pattern import ChaserPattern
 from .led_things.emboss_pattern import EmbossPattern
+from .led_things.white_fading_pattern import WhiteFadingPattern
 
 
 ColorOrder = AddressableLED.ColorOrder
@@ -24,7 +25,8 @@ class LEDSubsystem(Subsystem):
         self._LED_DATA_LIST = list(LEDData() for i in range(self._LED_STRIP_LENGTH))
         
         #self._pattern: LEDPattern = ChaserPattern(steps_per_second=50, length=5)
-        self._pattern: LEDPattern = EmbossPattern(steps_per_second=25)
+        #self._pattern: LEDPattern = EmbossPattern(steps_per_second=25)
+        self._pattern: LEDPattern = WhiteFadingPattern(steps_per_second=50)
 
         # "startup" functions
         self._setupLEDs()
