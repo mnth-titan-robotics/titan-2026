@@ -59,6 +59,7 @@ class RobotContainer:
         self.intake = Intake()
         self.intakeExtender = IntakeExtender()
         self.leds = LEDSubsystem()
+        self.leds = LEDSubsystem()
 
     def _initControllers(self):
         self._driverController = commands2.button.CommandXboxController(
@@ -104,7 +105,14 @@ class RobotContainer:
         SHAKE_SPEED = 1.0
         SHAKE_TIME = 1.0
         def invert_left():
+        # ==========================================
+        # DRIVER
+        # ==========================================
+        SHAKE_SPEED = 1.0
+        SHAKE_TIME = 1.0
+        def invert_left():
             self.invertLeft *= -1.0
+        def invert_right():
         def invert_right():
             self.invertRight *= -1.0
         # self._driverController.rightStick().whileTrue(cmd.runOnce(invert_right))
@@ -152,12 +160,24 @@ class RobotContainer:
         self._operatorController.leftTrigger().whileTrue(self.intake.intake())
         self._operatorController.rightTrigger().whileTrue(self.launcher.start())
         # self._operatorController.rightBumper().whileTrue(cmd.none())
+        # self._operatorController.rightBumper().whileTrue(cmd.none())
         self._operatorController.leftBumper().whileTrue(self.intake.reverse())
         self._operatorController.povUp().whileTrue(self.intakeExtender.extend())
         self._operatorController.povDown().whileTrue(self.intakeExtender.retract())
         # self._operatorController.povLeft().whileTrue(cmd.none())
         # self._operatorController.povRight().whileTrue(cmd.none())
+        # self._operatorController.povLeft().whileTrue(cmd.none())
+        # self._operatorController.povRight().whileTrue(cmd.none())
         self._operatorController.a().whileTrue(self.indexer.feed())
+        # self._operatorController.b().whileTrue(cmd.none())
+        # self._operatorController.y().whileTrue(cmd.none())
+        # self._operatorController.x().whileTrue(cmd.none())
+        self._operatorController.start().whileTrue(
+            cmd.parallel(
+                self.launcher.start(),
+                agitate_and_shoot
+            ))
+        self._operatorController.back().whileTrue(self.game.operatorResetCommand())
         # self._operatorController.b().whileTrue(cmd.none())
         # self._operatorController.y().whileTrue(cmd.none())
         # self._operatorController.x().whileTrue(cmd.none())

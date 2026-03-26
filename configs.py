@@ -10,9 +10,68 @@ import math
 
 from rev import SparkMaxConfig, SparkBaseConfig, FeedbackSensor
 from constants import ModuleConstants, Subsystems
+from rev import SparkMaxConfig, SparkBaseConfig, FeedbackSensor
+from constants import ModuleConstants, Subsystems
 
 
 class Configs:
+    class Indexer:
+        kConfig: SparkBaseConfig = SparkMaxConfig().inverted(True) \
+            .voltageCompensation(Subsystems.Indexer.MotorVComp) \
+            .smartCurrentLimit(Subsystems.Indexer.MotorCurrentLimit)
+
+    class Intake:
+        kConfig: SparkBaseConfig = SparkMaxConfig().inverted(False)
+
+    class IntakeExtender:
+        # ============================
+        # Left Motor Config
+        # ============================
+        kLeftConfig: SparkBaseConfig = SparkMaxConfig().inverted(True) \
+            .voltageCompensation(Subsystems.IntakeExtender.MotorVComp)
+        kLeftConfig.smartCurrentLimit(Subsystems.IntakeExtender.MotorCurrentLimit)
+        kLeftConfig.closedLoop \
+            .pid(*Subsystems.IntakeExtender.PID)
+        kLeftConfig.closedLoop.maxMotion \
+            .cruiseVelocity(Subsystems.IntakeExtender.MotorSpeed) \
+            .maxAcceleration(Subsystems.IntakeExtender.MaxAcceleration) \
+            .allowedProfileError(Subsystems.IntakeExtender.AllowedProfileError)
+        kLeftConfig.encoder \
+            .positionConversionFactor(Subsystems.IntakeExtender.GearReduction) \
+            .velocityConversionFactor(Subsystems.IntakeExtender.GearReduction / 60.0)
+
+        # ============================
+        # Right Motor Config
+        # ============================
+        kRightConfig: SparkBaseConfig = SparkMaxConfig().apply(kLeftConfig) \
+            .follow(Subsystems.IntakeExtender.LeftMotorId, True)
+
+    class Launcher:
+        # ============================
+        # Left Motor Config
+        # ============================
+        kLeftConfig: SparkBaseConfig = SparkMaxConfig().inverted(True)
+        kLeftConfig.smartCurrentLimit(Subsystems.Launcher.MotorCurrentLimit)
+        kLeftConfig.voltageCompensation(Subsystems.Launcher.MotorVComp)
+        kLeftConfig.closedLoop \
+            .setFeedbackSensor(FeedbackSensor.kPrimaryEncoder) \
+            .pidf(0.33, 0.0, 0.0, 0.3)
+        kLeftConfig.encoder \
+            .positionConversionFactor(Subsystems.Launcher.PositionConversionFactor) \
+            .velocityConversionFactor(Subsystems.Launcher.VelocityConversionFactor)
+
+        # ============================
+        # Right Motor Config
+        # ============================
+        # Configure the right motor to follow the left motor with inverted output, since they are mounted in opposite directions.
+        kRightConfig: SparkBaseConfig = SparkMaxConfig().apply(kLeftConfig) \
+            .follow(Subsystems.Launcher.LeftMotorId, True)
+
+    class MAXSwerveModule:
+        # ============================
+        # Driving Motor Config
+        # ============================
+        kDrivingConfig: SparkBaseConfig = SparkMaxConfig().inverted(False)
     class Indexer:
         kConfig: SparkBaseConfig = SparkMaxConfig().inverted(True) \
             .voltageCompensation(Subsystems.Indexer.MotorVComp) \
