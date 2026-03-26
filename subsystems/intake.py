@@ -170,6 +170,14 @@ class Intake(Subsystem):
             self._motor.set(self._speed_entry.get())
 
         return self.run(command_function).withName("IntakeStart")
+    
+    def intake_half_speed(self) -> Command:
+        """Starts the intake at half intake speed"""
+        def command_function():
+            motor_speed = self._speed_entry.get()
+            self._motor.set((motor_speed/2))
+            
+        return self.run(command_function).withName("IntakeStartAtHalfSpeed")
 
     def reverse(self) -> Command:
         """Reverses the intake."""

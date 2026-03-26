@@ -100,6 +100,8 @@ class RobotContainer:
         # ==========================================
         # DRIVER
         # ==========================================
+        SHAKE_SPEED = 1.0
+        SHAKE_TIME = 1.0
         def invert_left():
             self.invertLeft *= -1.0
         def invert_right():
@@ -116,7 +118,19 @@ class RobotContainer:
         # self._driverController.povRight().whileTrue(cmd.none())
         # self._driverController.a().whileTrue(cmd.none())
         # self._driverController.b().whileTrue(cmd.none())
-        # self._driverController.y().whileTrue(cmd.none())
+        $   UNTESTED PLEASE DON'T TRY TS WITHOUT TESTING
+        self._driverController.y().whileTrue(cmd.repeatingSequence(
+            self.drive.drive_joystick_command(
+                lambda: SHAKE_SPEED,
+                lambda: 0.0,
+                lambda: 0.0
+            ).withTimeout(SHAKE_TIME),
+            self.drive.drive_joystick_command(
+                lambda: -SHAKE_SPEED,
+                lambda: 0.0,
+                lambda: 0.0
+            ).withTimeout(SHAKE_TIME)
+        ))
         self._driverController.x().onTrue(self.game.toggleLockOnHub())
         self._driverController.start().onTrue(self.drive.toggle_field_relative_command())
         self._driverController.back().onTrue(self.game.driverResetCommand())
@@ -124,6 +138,14 @@ class RobotContainer:
         # ==========================================
         # OPERATOR
         # ==========================================
+        def agitate_and_shoot():
+            return cmd.none() \
+                .until(self.launcher.at_speed) \
+                .andThen(cmd.parallel(
+                    self.indexer.feed(),
+                    self.intake.intake_half_speed()
+                    )
+                )
         # self._operatorController.rightStick().whileTrue(cmd.none())
         # self._operatorController.leftStick().whileTrue(cmd.none())
         self._operatorController.leftTrigger().whileTrue(self.intake.intake())
@@ -138,7 +160,11 @@ class RobotContainer:
         # self._operatorController.b().whileTrue(cmd.none())
         # self._operatorController.y().whileTrue(cmd.none())
         # self._operatorController.x().whileTrue(cmd.none())
-        # self._operatorController.start().whileTrue(cmd.none())
+        self._operatorController.start().whileTrue(
+            cmd.parallel(
+                self.launcher.start(),
+                agitate_and_shoot
+            ))
         self._operatorController.back().whileTrue(self.game.operatorResetCommand())
 
     def getAutonomousCommand(self) -> commands2.Command:
