@@ -138,11 +138,7 @@ class RobotContainer:
         self._operatorController.b().whileTrue(self.indexer.reverse())
         # self._operatorController.y().whileTrue(cmd.none())
         # self._operatorController.x().whileTrue(cmd.none())
-        self._operatorController.start().whileTrue(
-            cmd.parallel(
-                self.launcher.start(),
-                self.game.agitate_and_shoot()
-            ))
+        self._operatorController.start().whileTrue(self.game.feed_and_shoot())
         self._operatorController.back().whileTrue(self.game.operatorResetCommand())
 
     def getAutonomousCommand(self) -> commands2.Command:

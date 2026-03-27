@@ -113,14 +113,24 @@ class IntakeExtender(Subsystem):
         def command_function():
             self._controller.setSetpoint(self.Constants.ExtendPosition, rev.SparkLowLevel.ControlType.kPosition)
 
-        return self.run(command_function).withName("IntakeAutoExtend")
+        return self.run(command_function) \
+            .until(self.is_extended) \
+            .withName("IntakeAutoExtend")
 
     def auto_retract(self) -> Command:
         """Retracts the intake mechanism."""
         def command_function():
             self._controller.setSetpoint(self.Constants.RetractPosition, rev.SparkLowLevel.ControlType.kPosition)
 
-        return self.run(command_function).withName("IntakeAutoRetract")
+        return self.run(command_function) \
+            .until(self.is_retracted) \
+            .withName("IntakeAutoRetract")
+
+    def is_retracted(self) -> bool:
+        return self.encoder.getPosition() < self.Constants.RetractPosition + self.Constants.AllowedProfileError
+    
+    def is_extended(self) -> bool:
+        return self.encoder.getPosition() > self.Constants.ExtendPosition - self.Constants.AllowedProfileError
 
 
 class Intake(Subsystem):

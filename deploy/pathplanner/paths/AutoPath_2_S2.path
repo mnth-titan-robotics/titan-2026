@@ -16,12 +16,12 @@
     },
     {
       "anchor": {
-        "x": 1.6583452211126959,
-        "y": 4.0
+        "x": 0.5714978601997143,
+        "y": 4.973052781740371
       },
       "prevControl": {
-        "x": 2.9122070200670698,
-        "y": 4.0029918745501165
+        "x": 1.2831241084165474,
+        "y": 4.701340941512125
       },
       "nextControl": null,
       "isLocked": false,
@@ -44,8 +44,14 @@
   ],
   "eventMarkers": [
     {
+      "name": "lowerIntake",
+      "waypointRelativePos": 0,
+      "endWaypointRelativePos": null,
+      "command": null
+    },
+    {
       "name": "startLauncher",
-      "waypointRelativePos": 0.1752136752136737,
+      "waypointRelativePos": 1.0,
       "endWaypointRelativePos": null,
       "command": null
     }
@@ -60,7 +66,7 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 1.55
+    "rotation": -11.103833436636094
   },
   "reversed": false,
   "folder": null,

@@ -8,6 +8,7 @@ from wpimath.kinematics import ChassisSpeeds
 from wpimath.trajectory import TrajectoryGenerator, TrajectoryConfig
 from wpimath.geometry import Pose2d, Rotation2d, Translation2d
 from commands.game import Game
+from pathplannerlib.events import EventTrigger
 from pathplannerlib.auto import AutoBuilder, DriveFeedforwards, NamedCommands, PathPlannerAuto
 from pathplannerlib.controller import PPHolonomicDriveController
 import constants
@@ -35,12 +36,11 @@ class Auto:
         self._selectedAuto = cmd.none()
         DriveConstants = constants.Subsystems.Drive
         
-        NamedCommands.registerCommand('climbtower', cmd.none())
-        NamedCommands.registerCommand('startLauncher', self.auto_launch(units.seconds(15)))
-        NamedCommands.registerCommand('runLauncher', self._game.agitate_and_shoot())
-        NamedCommands.registerCommand('stopLauncher', self._robot.launcher.stop())
-        NamedCommands.registerCommand('lowerIntake', self._robot.intakeExtender.auto_extend())
-        NamedCommands.registerCommand('runIntake', self._robot.intake.intake())
+        EventTrigger('climbtower').whileTrue(cmd.none())
+        EventTrigger('startLauncher').onTrue(self.auto_launch(units.seconds(15)))
+        EventTrigger('runLauncher').whileTrue(self._game.feed_and_shoot())
+        EventTrigger('lowerIntake').onTrue(self._robot.intakeExtender.auto_extend())
+        EventTrigger('runIntake').whileTrue(self._robot.intake.intake())
 
         def output(chassisSpeeds: ChassisSpeeds, driveFeedForward: DriveFeedforwards) -> None:
             self._robot.drive.set_chassis_speeds(chassisSpeeds)

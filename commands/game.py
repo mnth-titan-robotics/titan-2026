@@ -5,6 +5,7 @@ from commands2 import Command, cmd
 from commands2 import Command, cmd
 from wpimath.controller import HolonomicDriveController, PIDController, ProfiledPIDControllerRadians
 from wpimath.geometry import Pose2d, Rotation2d
+from wpimath.kinematics import ChassisSpeeds
 from wpimath.trajectory import Trajectory, TrapezoidProfileRadians
 from wpimath import units
 from wpimath import units
@@ -107,20 +108,15 @@ class Game:
     def agitateRobotCommand(self) -> Command:
         SHAKE_SPEED = 0.5
         SHAKE_TIME = 0.12
+        forward = ChassisSpeeds(SHAKE_SPEED * constants.Subsystems.Drive.kMaxSpeedMetersPerSecond)
+        reverse = ChassisSpeeds(SHAKE_SPEED * constants.Subsystems.Drive.kMaxSpeedMetersPerSecond)
         return cmd.repeatingSequence(
-            self._robot.drive.drive_joystick_command(
-                lambda: SHAKE_SPEED,
-                lambda: 0.0,
-                lambda: 0.0
-            ).withTimeout(SHAKE_TIME),
-            self._robot.drive.drive_joystick_command(
-                lambda: -SHAKE_SPEED,
-                lambda: 0.0,
-                lambda: 0.0
-            ).withTimeout(SHAKE_TIME)
+            self._robot.drive.drive_command(lambda:  forward).withTimeout(SHAKE_TIME),
+            self._robot.drive.drive_command(lambda: reverse).withTimeout(SHAKE_TIME)
         )
 
     def pulseIndexerCommand(self) -> Command:
+        """Runs the indexer, attempting to feed only one fuel at a time."""
         FEED_TIME = units.seconds(0.2)
         STOP_TIME = units.seconds(0.04)
 
@@ -129,20 +125,25 @@ class Game:
             self._robot.indexer.stop().withTimeout(STOP_TIME)
         )
 
-    def runIndexerCommand(self) -> Command:
+    def feedFuelCommand(self) -> Command:
+        """Runs the indexer while 'flapping' the intake"""
         return cmd.parallel(
             self.shakeIntakeCommand(),
             self.pulseIndexerCommand()
         )
     
-    def agitate_and_shoot(self):
-        return cmd.none() \
-            .until(self._robot.launcher.at_speed) \
-            .andThen(cmd.parallel(
-                self.runIndexerCommand(),
-                self._robot.intake.intake_half_speed()
+    def feed_and_shoot(self):
+        """Runs the launcher, then starts feeding fuel once the launcher is up to speed"""
+        return cmd.parallel(
+            self._robot.launcher.start(),
+            cmd.none() \
+                .until(self._robot.launcher.at_speed) \
+                .andThen(cmd.parallel(
+                    self.feedFuelCommand(),
+                    self._robot.intake.intake_half_speed()
+                    )
                 )
-            )
+        ) 
 
     def toggleLockOnHub(self) -> Command:
         return self._robot.drive.toggle_lock_command(constants.FieldConstants.kHubPose)

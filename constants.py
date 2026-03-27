@@ -162,7 +162,7 @@ class Subsystems:
         MotorCurrentLimit = 25
         MotorVComp = 12
         MaxAcceleration = 0.5
-        AllowedProfileError = 0.01
+        AllowedProfileError = 0.05
         MotorSpeed = 0.5
         ReverseSpeed = -0.5
 
