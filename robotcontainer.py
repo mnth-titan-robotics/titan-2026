@@ -113,10 +113,10 @@ class RobotContainer:
         # self._driverController.povDown().whileTrue(cmd.none())
         # self._driverController.povLeft().whileTrue(cmd.none())
         # self._driverController.povRight().whileTrue(cmd.none())
-        # self._driverController.a().whileTrue(cmd.none())
+        self._driverController.a().whileTrue(self.game.agitateRobotCommand())
         # self._driverController.b().whileTrue(cmd.none())
         #   UNTESTED PLEASE DON'T TRY TS WITHOUT TESTING
-        self._driverController.y().whileTrue(self.game.agitateRobotCommand())
+        # self._driverController.y().whileTrue(cmd.none())
         self._driverController.x().onTrue(self.game.toggleLockOnHub())
         self._driverController.start().onTrue(self.drive.toggle_field_relative_command())
         self._driverController.back().onTrue(self.game.driverResetCommand())

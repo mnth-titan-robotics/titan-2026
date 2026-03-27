@@ -106,7 +106,7 @@ class Game:
     
     def agitateRobotCommand(self) -> Command:
         SHAKE_SPEED = 0.5
-        SHAKE_TIME = 0.06
+        SHAKE_TIME = 0.12
         return cmd.repeatingSequence(
             self._robot.drive.drive_joystick_command(
                 lambda: SHAKE_SPEED,
@@ -132,7 +132,6 @@ class Game:
     def runIndexerCommand(self) -> Command:
         return cmd.parallel(
             self.shakeIntakeCommand(),
-            self._robot.intake.intake(),
             self.pulseIndexerCommand()
         )
     
@@ -140,9 +139,8 @@ class Game:
         return cmd.none() \
             .until(self._robot.launcher.at_speed) \
             .andThen(cmd.parallel(
-                self._robot.indexer.feed(),
-                self._robot.intake.intake_half_speed(),
-                self.shakeIntakeCommand()
+                self.runIndexerCommand(),
+                self._robot.intake.intake_half_speed()
                 )
             )
 

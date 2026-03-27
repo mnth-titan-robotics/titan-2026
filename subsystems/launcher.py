@@ -41,14 +41,22 @@ class Launcher(Subsystem):
         self._leftMotor.setCANTimeout(250)
         self._rightMotor.setCANTimeout(250)
         self._controller = self._leftMotor.getClosedLoopController()
-        self._leftMotor.configure(
-            Configs.Launcher.kLeftConfig,
-            rev.ResetMode.kResetSafeParameters,
-            rev.PersistMode.kPersistParameters)
-        self._rightMotor.configure(
-            Configs.Launcher.kRightConfig,
-            rev.ResetMode.kResetSafeParameters,
-            rev.PersistMode.kPersistParameters)
+        spark_config = rev.SparkMaxConfig()
+        spark_config.inverted(True)
+        spark_config.smartCurrentLimit(self.Constants.MotorCurrentLimit)
+        spark_config.voltageCompensation(self.Constants.MotorVComp)
+        spark_config.closedLoop \
+            .setFeedbackSensor(rev.FeedbackSensor.kPrimaryEncoder) \
+            .pidf(0.33, 0.0, 0.0, 0.3)
+        # 1:1000 1k RPM
+        # 1:1.5 gear reduction
+        gear_reduction = 1.0 / 1000.0 / 1.5
+        spark_config.encoder \
+            .positionConversionFactor(gear_reduction) \
+            .velocityConversionFactor(gear_reduction)
+        self._leftMotor.configure(spark_config, rev.ResetMode.kResetSafeParameters, rev.PersistMode.kPersistParameters)
+        spark_config.follow(self.Constants.LeftMotorId, True)
+        self._rightMotor.configure(spark_config, rev.ResetMode.kResetSafeParameters, rev.PersistMode.kPersistParameters)
 
         self._encoder = self._leftMotor.getEncoder()
         if not RobotBase.isReal():

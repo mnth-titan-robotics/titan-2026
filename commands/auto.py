@@ -37,7 +37,10 @@ class Auto:
         
         NamedCommands.registerCommand('climbtower', cmd.none())
         NamedCommands.registerCommand('startLauncher', self.auto_launch(units.seconds(15)))
+        NamedCommands.registerCommand('runLauncher', self._game.agitate_and_shoot())
         NamedCommands.registerCommand('stopLauncher', self._robot.launcher.stop())
+        NamedCommands.registerCommand('lowerIntake', self._robot.intakeExtender.auto_extend())
+        NamedCommands.registerCommand('runIntake', self._robot.intake.intake())
 
         def output(chassisSpeeds: ChassisSpeeds, driveFeedForward: DriveFeedforwards) -> None:
             self._robot.drive.set_chassis_speeds(chassisSpeeds)

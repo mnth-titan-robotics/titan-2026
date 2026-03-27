@@ -134,7 +134,7 @@ class Subsystems:
     class Launcher:
         MotorCurrentLimit = 60
         MotorVComp = 12
-        LaunchSpeed = 3.8
+        LaunchSpeed = 3.3
         IdleSpeed = 0.2
         LeftMotorId = 20
         RightMotorId = 21
@@ -151,7 +151,7 @@ class Subsystems:
         MotorId = 12
         MotorCurrentLimit = 25
         MotorVComp = 12
-        IntakeSpeed = 0.8
+        IntakeSpeed = 0.6
         ReverseSpeed = -0.5
 
     class IntakeExtender:
@@ -171,7 +171,7 @@ class Subsystems:
         RetractPosition = 0.0
         FlapPosition = 0.2
         ExtendPosition = 0.28
-        PID = (0.05, 0.0, 0.01)
+        PID = (1.7, 0.0, 0.01)
     
     class Indexer:
         MotorId = 16
