@@ -109,7 +109,7 @@ class Game:
         SHAKE_SPEED = 0.5
         SHAKE_TIME = 0.12
         forward = ChassisSpeeds(SHAKE_SPEED * constants.Subsystems.Drive.kMaxSpeedMetersPerSecond)
-        reverse = ChassisSpeeds(SHAKE_SPEED * constants.Subsystems.Drive.kMaxSpeedMetersPerSecond)
+        reverse = ChassisSpeeds(-SHAKE_SPEED * constants.Subsystems.Drive.kMaxSpeedMetersPerSecond)
         return cmd.repeatingSequence(
             self._robot.drive.drive_command(lambda:  forward).withTimeout(SHAKE_TIME),
             self._robot.drive.drive_command(lambda: reverse).withTimeout(SHAKE_TIME)
