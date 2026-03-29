@@ -69,7 +69,7 @@
       },
       "prevControl": {
         "x": 7.378597157282799,
-        "y": 7.018705266926377
+        "y": 7.018705266926378
       },
       "nextControl": {
         "x": 7.674821683309556,
@@ -148,7 +148,7 @@
         "y": 0.7550499286733237
       },
       "prevControl": {
-        "x": 1.458885038338673,
+        "x": 1.4588850383386727,
         "y": 1.163741125344453
       },
       "nextControl": null,
@@ -203,13 +203,34 @@
       "name": "lowerIntake",
       "waypointRelativePos": 0.0,
       "endWaypointRelativePos": null,
-      "command": null
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "lowerIntake"
+        }
+      }
     },
     {
       "name": "runIntake",
       "waypointRelativePos": 3.195972495088387,
       "endWaypointRelativePos": 6.396365422396797,
-      "command": null
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "runIntake"
+        }
+      }
+    },
+    {
+      "name": "startLauncher",
+      "waypointRelativePos": 8.566749379652615,
+      "endWaypointRelativePos": null,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "startLauncher"
+        }
+      }
     }
   ],
   "globalConstraints": {

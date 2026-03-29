@@ -14,7 +14,7 @@ class FieldConstants:
     kHubPose = Pose2d(Translation2d(4.5, 4.025), Rotation2d())
     kLeftPass = Pose2d(Translation2d(2.75, 6.25), Rotation2d())
     kRightPass = Pose2d(Translation2d(2.75, 1.5), Rotation2d())
-ENABLE_TELEMETRY = False
+ENABLE_TELEMETRY = True
 
 class Controllers:
     DriverPort = 0

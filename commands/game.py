@@ -103,7 +103,7 @@ class Game:
             cmd.waitSeconds(PAUSE_TIME),
             self._robot.intakeExtender.extend().withTimeout(SHAKE_TIME),
             cmd.waitSeconds(PAUSE_TIME)
-        )
+        ).withName('shakeIntakeCommand')
     
     def agitateRobotCommand(self) -> Command:
         SHAKE_SPEED = 0.5
@@ -113,7 +113,7 @@ class Game:
         return cmd.repeatingSequence(
             self._robot.drive.drive_command(lambda:  forward).withTimeout(SHAKE_TIME),
             self._robot.drive.drive_command(lambda: reverse).withTimeout(SHAKE_TIME)
-        )
+        ).withName('agitateRobotCommand')
 
     def pulseIndexerCommand(self) -> Command:
         """Runs the indexer, attempting to feed only one fuel at a time."""
@@ -123,14 +123,14 @@ class Game:
         return cmd.repeatingSequence(
             self._robot.indexer.feed().withTimeout(FEED_TIME),
             self._robot.indexer.stop().withTimeout(STOP_TIME)
-        )
+        ).withName('pulseIndexerCommand')
 
     def feedFuelCommand(self) -> Command:
         """Runs the indexer while 'flapping' the intake"""
         return cmd.parallel(
             self.shakeIntakeCommand(),
             self.pulseIndexerCommand()
-        )
+        ).withName('feedFuelCommand')
     
     def feed_and_shoot(self):
         """Runs the launcher, then starts feeding fuel once the launcher is up to speed"""
@@ -143,7 +143,7 @@ class Game:
                     self._robot.intake.intake_half_speed()
                     )
                 )
-        ) 
+        ).withName('feed_and_shoot')
 
     def toggleLockOnHub(self) -> Command:
         return self._robot.drive.toggle_lock_command(constants.FieldConstants.kHubPose)

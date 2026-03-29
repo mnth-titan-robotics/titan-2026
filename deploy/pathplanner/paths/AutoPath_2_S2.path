@@ -47,13 +47,23 @@
       "name": "lowerIntake",
       "waypointRelativePos": 0,
       "endWaypointRelativePos": null,
-      "command": null
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "lowerIntake"
+        }
+      }
     },
     {
       "name": "startLauncher",
       "waypointRelativePos": 1.0,
       "endWaypointRelativePos": null,
-      "command": null
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "startLauncher"
+        }
+      }
     }
   ],
   "globalConstraints": {

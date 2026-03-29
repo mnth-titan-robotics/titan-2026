@@ -3,25 +3,25 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.52151212553495,
-        "y": 1.7125106990014274
+        "x": 3.45681883024251,
+        "y": 4.0
       },
       "prevControl": null,
       "nextControl": {
-        "x": 3.288229656828024,
-        "y": 1.6226258293402764
+        "x": 3.1695160984826725,
+        "y": 4.005252015340983
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 0.6879457917261056,
-        "y": 0.7032952924393738
+        "x": 3.4,
+        "y": 4.0
       },
       "prevControl": {
-        "x": 2.085320970042795,
-        "y": 1.4278601997146936
+        "x": 3.7435410974860517,
+        "y": 3.994167858479743
       },
       "nextControl": null,
       "isLocked": false,
@@ -53,17 +53,6 @@
           "name": "lowerIntake"
         }
       }
-    },
-    {
-      "name": "startLauncher",
-      "waypointRelativePos": 1.0,
-      "endWaypointRelativePos": null,
-      "command": {
-        "type": "named",
-        "data": {
-          "name": "startLauncher"
-        }
-      }
     }
   ],
   "globalConstraints": {
@@ -76,7 +65,7 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 40.72323280517303
+    "rotation": 0.0
   },
   "reversed": false,
   "folder": null,

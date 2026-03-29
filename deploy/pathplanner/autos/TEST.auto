@@ -7,43 +7,19 @@
         {
           "type": "path",
           "data": {
-            "pathName": "1_S1"
+            "pathName": "2"
           }
         },
         {
-          "type": "path",
+          "type": "wait",
           "data": {
-            "pathName": "S1_DE"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "DE_Pickup"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "DE_S2"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "S2_T"
+            "waitTime": 1.0
           }
         },
         {
           "type": "named",
           "data": {
-            "name": "climbtower"
-          }
-        },
-        {
-          "type": "parallel",
-          "data": {
-            "commands": []
+            "name": "startLauncher"
           }
         }
       ]

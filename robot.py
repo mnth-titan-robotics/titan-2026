@@ -8,9 +8,10 @@
 import wpilib
 import commands2
 import typing
-from lib import utils
+from lib import utils, logger
 
 from robotcontainer import RobotContainer
+import constants
 
 
 class Robot(commands2.TimedCommandRobot):
@@ -22,6 +23,8 @@ class Robot(commands2.TimedCommandRobot):
         """Calls the TimedCommandRobot __init__ method"""
         super().__init__()
         utils.setRobotInstance(self)
+        # if constants.ENABLE_TELEMETRY:
+        #     logger.start()
 
     def robotInit(self) -> None:
         """

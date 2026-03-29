@@ -13,12 +13,6 @@
                 "data": {
                   "pathName": "AutoPath_1_NPickup"
                 }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "startLauncher"
-                }
               }
             ]
           }

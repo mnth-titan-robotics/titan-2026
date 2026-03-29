@@ -7,6 +7,7 @@ from configs import Configs
 
 import constants
 
+ENABLE_TELEMETRY = constants.ENABLE_TELEMETRY
 
 class IntakeExtender(Subsystem):
     Constants = constants.Subsystems.IntakeExtender
@@ -42,6 +43,10 @@ class IntakeExtender(Subsystem):
         
         self.encoder = self._leftMotor.getEncoder()
         self.encoder.setPosition(0)
+        if ENABLE_TELEMETRY:
+            self._cur_speed = self.nt_instance.getFloatTopic("Subsystems/Launcher/Launcher_Velocity").publish()
+            self._cur_amps = self.nt_instance.getFloatTopic("Subsystems/Launcher/Launcher_Amps").publish()
+            self._at_speed = self.nt_instance.getBooleanTopic("Subsystems/Launcher/At_Speed").publish()
 
         if not RobotBase.isReal():
             from wpilib.simulation import SingleJointedArmSim
@@ -69,6 +74,9 @@ class IntakeExtender(Subsystem):
     def periodic(self) -> None:
         """Updates the current state of the intake."""
         self._pos_publisher.set(self.encoder.getPosition())
+        if ENABLE_TELEMETRY:
+            self._cur_speed.set(self.encoder.getVelocity())
+            self._cur_amps.set(self._leftMotor.getOutputCurrent())
 
     def simulationPeriodic(self) -> None:
         vbus = RobotController.getBatteryVoltage()
@@ -115,7 +123,8 @@ class IntakeExtender(Subsystem):
 
         return self.run(command_function) \
             .until(self.is_extended) \
-            .withName("IntakeAutoExtend")
+            .withName("IntakeAutoExtend") \
+            .withTimeout(1.0)
 
     def auto_retract(self) -> Command:
         """Retracts the intake mechanism."""
