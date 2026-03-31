@@ -37,7 +37,7 @@ class Auto:
         DriveConstants = constants.Subsystems.Drive
         
         NamedCommands.registerCommand('climbtower', cmd.none())
-        NamedCommands.registerCommand('startLauncher', cmd.none())
+        NamedCommands.registerCommand('startLauncher', self._game.feed_and_shoot())
         NamedCommands.registerCommand('runLauncher', self._game.feed_and_shoot())
         NamedCommands.registerCommand('lowerIntake', self._robot.intakeExtender.auto_extend())
         NamedCommands.registerCommand('runIntake', self._robot.intake.intake())
