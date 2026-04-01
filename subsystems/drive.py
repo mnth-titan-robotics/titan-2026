@@ -14,6 +14,7 @@ from wpimath.geometry import Rotation2d, Pose2d, Pose3d, Translation2d, Rotation
 from wpimath.kinematics import ChassisSpeeds, SwerveModuleState, SwerveDrive4Odometry, SwerveDrive4Kinematics
 from wpimath.trajectory import Trajectory, TrapezoidProfileRadians
 from wpimath import units
+import wpimath
 import math
 import constants
 from services import Tracker
@@ -79,6 +80,7 @@ class Drive(Subsystem):
         networkTable = NetworkTableInstance.getDefault()
 
         topic_key = "Swerve"
+        self._fieldRelativePublisher = networkTable.getBooleanTopic(f"{topic_key}/FieldRelative").publish()
         if ENABLE_TELEMETRY:
             self._desiredStatePublisher = networkTable.getStructArrayTopic(
                 "Swerve/Modules/DesiredStates", SwerveModuleState).publish()
@@ -86,7 +88,6 @@ class Drive(Subsystem):
             f"{topic_key}/Modules/States", SwerveModuleState).publish()
             self._pose_publisher = networkTable.getStructTopic(f"{topic_key}/Pose", Pose2d).publish()
             self._anglePublisher = networkTable.getStructTopic(f"{topic_key}/Angle", Rotation2d).publish()
-            self._fieldRelativePublisher = networkTable.getBooleanTopic(f"{topic_key}/FieldRelative").publish()
             self._target_publisher = networkTable.getStructTopic(f"{topic_key}/Target", Pose2d).publish()
             self._omega_publisher = networkTable.getFloatTopic(f"{topic_key}/Omega").publish()
 
@@ -116,6 +117,7 @@ class Drive(Subsystem):
         self._update_lock_target()
 
     def _update_telemetry(self) -> None:
+        self._fieldRelativePublisher.set(self._fieldRelative)
         if ENABLE_TELEMETRY:
             self._pose_publisher.set(self.get_pose())
 
@@ -134,7 +136,6 @@ class Drive(Subsystem):
             ])
 
             self._anglePublisher.set(self._get_gyro_angle())
-            self._fieldRelativePublisher.set(self._fieldRelative)
             self._target_publisher.set(self._lock_target)
 
     def toggle_lock_command(self, lock_target: Pose2d) -> Command:
@@ -295,6 +296,7 @@ class Drive(Subsystem):
         """
         Zeroes the heading of the robot.
         """
+        print('GYRO RESET')
         self._gyro.reset()
 
     def getHeading(self) -> float:
@@ -302,6 +304,8 @@ class Drive(Subsystem):
         Returns the heading of the robot.
         :return: The robot's heading in degrees, from -180 to 180
         """
+        #heading = self._localization.get_pose2d().rotation().degrees()
+        #return heading
         return self._get_gyro_angle().degrees()
 
     def getTurnRate(self) -> float:
