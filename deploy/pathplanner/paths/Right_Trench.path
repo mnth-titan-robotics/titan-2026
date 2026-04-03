@@ -37,6 +37,12 @@
       "waypointRelativePos": 0.0,
       "endWaypointRelativePos": null,
       "command": null
+    },
+    {
+      "name": "startLauncher",
+      "waypointRelativePos": 0.4018152290897913,
+      "endWaypointRelativePos": null,
+      "command": null
     }
   ],
   "globalConstraints": {
