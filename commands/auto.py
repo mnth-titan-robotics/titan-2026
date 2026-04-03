@@ -8,7 +8,6 @@ from wpimath.kinematics import ChassisSpeeds
 from wpimath.trajectory import TrajectoryGenerator, TrajectoryConfig
 from wpimath.geometry import Pose2d, Rotation2d, Translation2d
 from commands.game import Game
-from pathplannerlib.events import EventTrigger
 from pathplannerlib.auto import AutoBuilder, DriveFeedforwards, NamedCommands, PathPlannerAuto, FlippingUtil
 from pathplannerlib.controller import PPHolonomicDriveController
 import constants

@@ -21,6 +21,7 @@ from services import Tracker
 from services.localization import Localization
 from .max_swerve_module import MAXSwerveModule
 import numpy
+from lib.utils import apply_joystick_curves
 IMUAxis = ADIS16470_IMU.IMUAxis
 DriveConstants = constants.Subsystems.Drive
 ENABLE_TELEMETRY = constants.ENABLE_TELEMETRY
@@ -192,27 +193,23 @@ class Drive(Subsystem):
 
             if ENABLE_TELEMETRY:
                 self._omega_publisher.set(omega)
-            # Get the magnitude of the vector (how far the joystick is pushed in that direction)
-            mag = numpy.linalg.norm(input_vec)
-            if mag < 0.05:
-                # If the magnitude is very small don't move at all
-                return ChassisSpeeds(0, 0, omega)
 
-            # Cube the magnitude to provide finer control at low speeds while still allowing full speed at max joystick deflection
-            v = input_vec * mag ** 2 * DriveConstants.kMaxSpeedMetersPerSecond
-            input_speeds = ChassisSpeeds(
-                v[0],
-                v[1],
-                omega
-            )
-            output_speeds = input_speeds
+            # Apply joystick curves (deadzone and exponential)
+            curved_input = apply_joystick_curves(input_vec)
+            v = curved_input * DriveConstants.kMaxSpeedMetersPerSecond
             if self._fieldRelative:
                 # Convert the input speeds from field-relative to robot-relative using the gyro angle
                 output_speeds = ChassisSpeeds.fromFieldRelativeSpeeds(
-                    input_speeds.vx,
-                    input_speeds.vy,
-                    input_speeds.omega,
+                    v[0],
+                    v[1],
+                    omega,
                     self._get_gyro_angle()
+                )
+            else:
+                output_speeds = ChassisSpeeds(
+                    v[0],
+                    v[1],
+                    omega
                 )
             return output_speeds
 
