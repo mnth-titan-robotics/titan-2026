@@ -3,12 +3,12 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 4.0689410955255685,
+        "x": 4.06,
         "y": 7.585855633624188
       },
       "prevControl": null,
       "nextControl": {
-        "x": 3.4352741382925447,
+        "x": 3.4263330427669754,
         "y": 7.406637292596589
       },
       "isLocked": false,
@@ -40,7 +40,7 @@
     },
     {
       "name": "startLauncher",
-      "waypointRelativePos": 0.4146534824723248,
+      "waypointRelativePos": 1.0,
       "endWaypointRelativePos": null,
       "command": null
     }
@@ -61,7 +61,7 @@
   "folder": null,
   "idealStartingState": {
     "velocity": 0,
-    "rotation": -89.3811159451892
+    "rotation": -90.0
   },
   "useDefaultConstraints": true
 }
