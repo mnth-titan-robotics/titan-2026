@@ -1,22 +1,36 @@
-from typing import Callable
+from typing import Callable, TypeVar
 
 from commands2 import TimedCommandRobot
+from wpilib import DriverStation
 from wpimath import units
 import wpimath
 from wpimath.geometry import Pose2d, Pose3d
 import numpy
 import math
 
-robot: TimedCommandRobot = None
+Alliance = DriverStation.Alliance
+T = TypeVar("T")
+robot: TimedCommandRobot = None # type: ignore
 
 
 def setRobotInstance(instance: TimedCommandRobot) -> None:
     global robot
     robot = instance
 
+def clamp(value: float, min_value: float, max_value: float) -> float:
+    """Clamps a value between a minimum and maximum."""
+    return max(min_value, min(max_value, value))
 
 def addRobotPeriodic(callback: Callable[[], None], period: units.seconds = 0.02, offset: units.seconds = 0) -> None:
     robot.addPeriodic(callback, period, offset)
+
+
+def getAlliance() -> Alliance:
+    return DriverStation.getAlliance() or Alliance.kBlue
+
+
+def getValueForAlliance(blueValue: T, redValue: T) -> T:
+    return blueValue if DriverStation.getAlliance() == Alliance.kBlue else redValue
 
 
 def apply_deadband(value: float) -> float:
@@ -25,7 +39,7 @@ def apply_deadband(value: float) -> float:
 
 
 def wrapAngle(angle: units.degrees) -> units.degrees:
-  return wpimath.inputModulus(angle, -180, 180)
+    return wpimath.inputModulus(angle, -180, 180)
 
 
 def apply_joystick_curves(input_vec: numpy.ndarray) -> numpy.ndarray:
@@ -51,7 +65,7 @@ def apply_joystick_curves(input_vec: numpy.ndarray) -> numpy.ndarray:
     return input_vec * mag ** 2
 
 
-def get_target_heading(sourcePose: Pose2d | Pose3d, targetPose: Pose2d | Pose3d, isRobotRelative: bool = False) -> tuple[units.degrees, units.meters]:
+def get_target_heading(sourcePose: Pose2d | Pose3d, targetPose: Pose2d | Pose3d) -> tuple[units.degrees, units.degrees, units.meters]:
     if isinstance(sourcePose, Pose3d):
         sourcePose = sourcePose.toPose2d()
     if isinstance(targetPose, Pose3d):
@@ -62,6 +76,6 @@ def get_target_heading(sourcePose: Pose2d | Pose3d, targetPose: Pose2d | Pose3d,
     to_target = target_vec - source_vec
     distance = numpy.linalg.norm(to_target)
     angle = math.atan2(to_target[1], to_target[0])
-    if isRobotRelative:
-        angle -= sourcePose.rotation().radians()
-    return units.radiansToDegrees(angle), units.meters(distance)
+    absolute_angle  = units.radiansToDegrees(angle)
+    relative_angle = wrapAngle(absolute_angle - sourcePose.rotation().degrees())
+    return relative_angle, absolute_angle, units.meters(distance)

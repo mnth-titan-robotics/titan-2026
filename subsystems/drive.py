@@ -9,32 +9,24 @@ from typing import Callable
 from commands2 import Subsystem, Command, cmd
 from ntcore import NetworkTableInstance
 from wpilib import ADIS16470_IMU
+from wpimath import units
 from wpimath.controller import ProfiledPIDControllerRadians
-from wpimath.geometry import Rotation2d, Pose2d, Pose3d, Translation2d, Rotation2d
+from wpimath.geometry import Rotation2d, Pose2d, Pose3d, Translation2d
 from wpimath.kinematics import ChassisSpeeds, SwerveModuleState, SwerveDrive4Odometry, SwerveDrive4Kinematics
 from wpimath.trajectory import Trajectory, TrapezoidProfileRadians
-from wpimath import units
-import wpimath
 import math
 import constants
 from services import Tracker
 from services.localization import Localization
 from .max_swerve_module import MAXSwerveModule
 import numpy
-from lib.utils import apply_joystick_curves
+from lib.utils import apply_joystick_curves, clamp
 from lib.gyro_navx2 import Gyro_NAVX2
 from navx import AHRS
 IMUAxis = ADIS16470_IMU.IMUAxis
 DriveConstants = constants.Subsystems.Drive
 ENABLE_TELEMETRY = constants.ENABLE_TELEMETRY
 
-
-def getTargetHeading(sourcePose: Pose2d | Pose3d, targetPose: Pose2d | Pose3d, isRobotRelative: bool = False) -> units.degrees:
-    if isinstance(sourcePose, Pose3d):
-        sourcePose = sourcePose.toPose2d()
-    if isinstance(targetPose, Pose3d):
-        targetPose = targetPose.toPose2d()
-    return math.atan2(targetPose.Y() - sourcePose.Y(), targetPose.X() - sourcePose.X()) - (sourcePose.rotation().radians() if isRobotRelative else 0)
 
 class Drive(Subsystem):
     _fieldRelative = True
@@ -69,7 +61,7 @@ class Drive(Subsystem):
         # The gyro sensor
         self._gyro = ADIS16470_IMU()
         self._navX = Gyro_NAVX2(AHRS.NavXComType.kUSB1)
-        self._theta_controller = ProfiledPIDControllerRadians(
+        self._auto_aim_pid_controller = ProfiledPIDControllerRadians(
             Kp=DriveConstants.RotationPID.P,
             Ki=DriveConstants.RotationPID.I,
             Kd=DriveConstants.RotationPID.D,
@@ -78,8 +70,8 @@ class Drive(Subsystem):
                 maxAcceleration=DriveConstants.kMaxAcceleration
             )
         )
-        self._theta_controller.setTolerance(math.pi / 45.0)
-        self._theta_controller.enableContinuousInput(-math.pi, math.pi)
+        self._auto_aim_pid_controller.setTolerance(math.pi / 45.0)  # 2 degrees
+        self._auto_aim_pid_controller.enableContinuousInput(-math.pi, math.pi)
 
         networkTable = NetworkTableInstance.getDefault()
 
@@ -94,7 +86,7 @@ class Drive(Subsystem):
             self._localizationAnglePublisher = networkTable.getStructTopic(f"{topic_key}/QuestAngle", Rotation2d).publish()
             self._gyroAnglePublisher = networkTable.getStructTopic(f"{topic_key}/GyroAngle", Rotation2d).publish()
             self._target_publisher = networkTable.getStructTopic(f"{topic_key}/Target", Pose2d).publish()
-            self._omega_publisher = networkTable.getFloatTopic(f"{topic_key}/Omega").publish()
+            self._turn_rate_publisher = networkTable.getFloatTopic(f"{topic_key}/TurnRate").publish()
 
         # Odometry class for tracking robot pose
         self._odometry = SwerveDrive4Odometry(
@@ -119,7 +111,6 @@ class Drive(Subsystem):
             )
         )
         self._update_telemetry()
-        self._update_lock_target()
 
     def _update_telemetry(self) -> None:
         self._fieldRelativePublisher.set(self._fieldRelative)
@@ -147,18 +138,11 @@ class Drive(Subsystem):
     def toggle_lock_command(self, lock_target: Pose2d) -> Command:
         def run():
             self._lockEnabled = not self._lockEnabled
-            self._lock_target = lock_target
             if self._lockEnabled:
-                theta = getTargetHeading(self._localization.get_pose(), self._lock_target)
-                self._theta_controller.reset(units.degreesToRadians(self._get_gyro_degrees()))
-                self._theta_controller.setGoal(theta)
+                self._tracker.enable_tracking(lock_target)
+                self._auto_aim_pid_controller.reset(self._tracker.relative_heading)
+                self._auto_aim_pid_controller.setGoal(0.0)
         return cmd.runOnce(run)
-
-    def _update_lock_target(self):
-        if self._lockEnabled:
-            projected_pose = self._localization.get_projected_pose2d(DriveConstants.kTurnLatency)
-            theta = getTargetHeading(projected_pose, self._lock_target)
-            self._theta_controller.setGoal(theta)
 
     def get_pose(self) -> Pose2d:
         """
@@ -190,10 +174,17 @@ class Drive(Subsystem):
         """Returns a command that drives the robot with joystick input"""
         def run() -> ChassisSpeeds:
             input_vec = numpy.array([get_x(), get_y()])
-            omega = get_omega() * DriveConstants.kMaxAngularSpeed
+            turn_rate = get_omega() * DriveConstants.kMaxAngularSpeed
+            if self._lockEnabled:
+                # The profiled PID controller setpoint is 0 - this means positive relative angles give a negative result.
+                # To compensate for this, negate the output of the PID controller.
+                turn_rate = clamp(
+                    -self._auto_aim_pid_controller.calculate(units.degreesToRadians(self._tracker.relative_heading)),
+                    -DriveConstants.kMaxAngularSpeed,
+                    DriveConstants.kMaxAngularSpeed)
 
             if ENABLE_TELEMETRY:
-                self._omega_publisher.set(omega)
+                self._turn_rate_publisher.set(turn_rate)
 
             # Apply joystick curves (deadzone and exponential)
             curved_input = apply_joystick_curves(input_vec)
@@ -203,14 +194,14 @@ class Drive(Subsystem):
                 output_speeds = ChassisSpeeds.fromFieldRelativeSpeeds(
                     v[0],
                     v[1],
-                    omega,
+                    turn_rate,
                     self._get_localization_angle()
                 )
             else:
                 output_speeds = ChassisSpeeds(
                     v[0],
                     v[1],
-                    omega
+                    turn_rate
                 )
             return output_speeds
 

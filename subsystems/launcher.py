@@ -5,6 +5,7 @@ from configs import Configs
 import constants
 from wpilib import RobotBase, RobotController
 from wpimath import units
+from services import Tracker
 
 ENABLE_TELEMETRY = constants.ENABLE_TELEMETRY
 
@@ -18,9 +19,14 @@ class Launcher(Subsystem):
     #   12' 2" 1.32s
     #   14' 6" 1.51s
     #
-    #
+    # 3.8 - corner - 5.2m
+    # 3.3 - mid - ~4.5m
+    # 2.8 - trench - ~3.5m
+    SPEED_LOOKUP_SLOPE = (3.8 - 2.8) / (5.2 - 3.5)
+    SPEED_LOOKUP_INTERCEPT = 3.8 - SPEED_LOOKUP_SLOPE * 5.2
 
-    def __init__(self):
+    def __init__(self, tracker: Tracker):
+        self._tracker = tracker
         self.nt_instance = ntcore.NetworkTableInstance.getDefault()
         self._speed_entry = self.nt_instance.getFloatTopic(
             "Subsystems/Launcher/Launcher_Speed").getEntry(self.Constants.LaunchSpeed)
@@ -73,6 +79,8 @@ class Launcher(Subsystem):
 
     def periodic(self) -> None:
         """Updates the current speed of the launcher on the dashboard."""
+        dist = self._tracker.target_dist
+        self._speed_entry.set(self.SPEED_LOOKUP_SLOPE * dist + self.SPEED_LOOKUP_INTERCEPT)
         if ENABLE_TELEMETRY:
             self._cur_speed.set(self._encoder.getVelocity())
             self._at_speed.set(self.at_speed())
@@ -112,4 +120,4 @@ class Launcher(Subsystem):
     def at_speed(self) -> bool:
         """Returns True if the launcher is at launch speed."""
         v = self._encoder.getVelocity()
-        return abs(v) >= self.Constants.MinLaunchSpeed
+        return abs(v) >= self._speed_entry.get() * 0.9

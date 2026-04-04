@@ -4,7 +4,7 @@
 # the WPILib BSD license file in the root directory of this project.
 #
 
-from rev import SparkMax, SparkBase, ResetMode, PersistMode
+from rev import SparkMax, SparkFlex, SparkBase, ResetMode, PersistMode
 from wpimath.geometry import Rotation2d
 from wpimath.kinematics import SwerveModulePosition, SwerveModuleState
 
@@ -19,7 +19,7 @@ class MAXSwerveModule:
         MAXSwerve Module built with NEOs, SPARKS MAX, and a Through Bore
         Encoder. 
         """
-        self._drivingSpark = SparkMax(drivingCANId, SparkBase.MotorType.kBrushless)
+        self._drivingSpark = SparkFlex(drivingCANId, SparkBase.MotorType.kBrushless)
         self._turningSpark = SparkMax(turningCANId, SparkBase.MotorType.kBrushless)
 
         self._drivingEncoder = self._drivingSpark.getEncoder()

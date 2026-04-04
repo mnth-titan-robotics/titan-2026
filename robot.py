@@ -16,7 +16,7 @@ import constants
 
 class Robot(commands2.TimedCommandRobot):
     """Add any setup/cleanup that needs to be done when starting teleop, auto or disabling the robot here"""
-    container: typing.Optional[RobotContainer] = None
+    container: RobotContainer = None # type: ignore
     autonomousCommand: typing.Optional[commands2.Command] = None
 
     def __init__(self):
@@ -47,6 +47,11 @@ class Robot(commands2.TimedCommandRobot):
 
     def disabledPeriodic(self) -> None:
         """Called periodically when disabled"""
+        # Track the HUB by default
+        self.container.tracker.enable_tracking(utils.getValueForAlliance(
+            constants.FieldConstants.kBlueHubPose,
+            constants.FieldConstants.kRedHubPose
+        ))
 
     def autonomousInit(self) -> None:
         """Called once when beginning autonomous. Should schedule the selected autonomous command."""

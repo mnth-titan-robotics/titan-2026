@@ -5,10 +5,8 @@ from commands2 import Command, cmd
 from wpilib import DriverStation, SmartDashboard
 from wpimath import units
 from wpimath.kinematics import ChassisSpeeds
-from wpimath.trajectory import TrajectoryGenerator, TrajectoryConfig
-from wpimath.geometry import Pose2d, Rotation2d, Translation2d
 from commands.game import Game
-from pathplannerlib.auto import AutoBuilder, DriveFeedforwards, EventTrigger, NamedCommands, PathPlannerAuto, FlippingUtil
+from pathplannerlib.auto import AutoBuilder, DriveFeedforwards, EventTrigger, PathPlannerAuto, FlippingUtil
 from pathplannerlib.controller import PPHolonomicDriveController
 import constants
 
@@ -84,23 +82,6 @@ class Auto:
 
             drive.drive_command(lambda: speeds).withTimeout(0.5),
             self.auto_launch(units.seconds(2.0))
-        )
-
-    def auto_test(self) -> Command:
-        # A simple test auto that spins in place for 2 seconds
-
-        trajectory = TrajectoryGenerator.generateTrajectory(
-            Pose2d(0, 0, Rotation2d(0)),
-            [Translation2d(1, 0), Translation2d(0, 1), Translation2d(1.2, 1.2)],
-            Pose2d(1, 1, Rotation2d(0)),
-            TrajectoryConfig(
-                units.meters_per_second(1.0),
-                units.meters_per_second_squared(1.5)
-            )
-        )
-
-        return self._game.followTrajectoryCommand(
-            trajectory=trajectory
         )
 
     def _feed_when_at_speed(self) -> Command:

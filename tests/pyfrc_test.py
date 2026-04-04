@@ -6,6 +6,7 @@
 import numpy
 from lib.utils import apply_joystick_curves
 from pyfrc.tests import *
+from target_heading_tests import *
 
 
 def test_deadzone_at_origin():
