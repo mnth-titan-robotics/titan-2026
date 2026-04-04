@@ -24,7 +24,8 @@ def start() -> None:
 
 
 def log(message: str) -> None:
-    DataLogManager.log(f'[{"%.6f" % Timer.getFPGATimestamp()}] {message}')
+    print(f'[{"%.6f" % Timer.getFPGATimestamp()}] {message}')
+    # DataLogManager.log(f'[{"%.6f" % Timer.getFPGATimestamp()}] {message}')
 
 
 def log_(message: str) -> Command:

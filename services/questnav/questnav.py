@@ -326,6 +326,7 @@ class QuestNav:
                         pose_proto = frame_data.pose3d
                         trans = pose_proto.translation
                         rot_quat = pose_proto.rotation.q
+                        # self._tracking = pose_proto.isTracking
 
                         translation = Translation3d(trans.x, trans.y, trans.z)
                         quaternion = Quaternion(rot_quat.w, rot_quat.x, rot_quat.y, rot_quat.z)
@@ -351,7 +352,6 @@ class QuestNav:
                         device_data.ParseFromString(raw_data)
 
                         self._battery_percent = device_data.battery_percent
-                        self._tracking = device_data.currently_tracking
                         self._tracking_lost_counter = device_data.tracking_lost_counter
 
                 # Parse command responses

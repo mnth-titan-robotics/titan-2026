@@ -10,7 +10,7 @@ components = [
     "apriltag",
     "commands2",
     # "cscore",
-    # "navx",
+    "navx",
     # "pathplannerlib",
     # "phoenix5",
     # "phoenix6",
@@ -28,5 +28,7 @@ requires = [
     "protobuf~=6.33.4",
     "robotpy-hal==2026.2.1",
     "robotpy-pathplannerlib==2026.1.2",
-    "robotpy-rev==2026.0.1"
+    "robotpy-rev==2026.0.1",
+    "robotpy-navx==2026.0.1.1"
+
 ]

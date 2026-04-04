@@ -22,6 +22,8 @@ from services.localization import Localization
 from .max_swerve_module import MAXSwerveModule
 import numpy
 from lib.utils import apply_joystick_curves
+from lib.gyro_navx2 import Gyro_NAVX2
+from navx import AHRS
 IMUAxis = ADIS16470_IMU.IMUAxis
 DriveConstants = constants.Subsystems.Drive
 ENABLE_TELEMETRY = constants.ENABLE_TELEMETRY
@@ -66,6 +68,7 @@ class Drive(Subsystem):
 
         # The gyro sensor
         self._gyro = ADIS16470_IMU()
+        self._navX = Gyro_NAVX2(AHRS.NavXComType.kUSB1)
         self._theta_controller = ProfiledPIDControllerRadians(
             Kp=DriveConstants.RotationPID.P,
             Ki=DriveConstants.RotationPID.I,
@@ -88,14 +91,15 @@ class Drive(Subsystem):
             self._statePublisher = networkTable.getStructArrayTopic(
             f"{topic_key}/Modules/States", SwerveModuleState).publish()
             self._pose_publisher = networkTable.getStructTopic(f"{topic_key}/Pose", Pose2d).publish()
-            self._anglePublisher = networkTable.getStructTopic(f"{topic_key}/Angle", Rotation2d).publish()
+            self._localizationAnglePublisher = networkTable.getStructTopic(f"{topic_key}/QuestAngle", Rotation2d).publish()
+            self._gyroAnglePublisher = networkTable.getStructTopic(f"{topic_key}/GyroAngle", Rotation2d).publish()
             self._target_publisher = networkTable.getStructTopic(f"{topic_key}/Target", Pose2d).publish()
             self._omega_publisher = networkTable.getFloatTopic(f"{topic_key}/Omega").publish()
 
         # Odometry class for tracking robot pose
         self._odometry = SwerveDrive4Odometry(
             DriveConstants.kDriveKinematics,
-            self._get_gyro_angle(),
+            self._get_localization_angle(),
             (
                 self._frontLeft.getPosition(),
                 self._frontRight.getPosition(),
@@ -106,7 +110,7 @@ class Drive(Subsystem):
 
     def periodic(self) -> None:
         self._odometry.update(
-            self._get_gyro_angle(),
+            self._get_localization_angle(),
             (
                 self._frontLeft.getPosition(),
                 self._frontRight.getPosition(),
@@ -136,7 +140,8 @@ class Drive(Subsystem):
                 self._rearRight.getDesiredState()
             ])
 
-            self._anglePublisher.set(self._get_gyro_angle())
+            self._localizationAnglePublisher.set(self._get_localization_angle())
+            self._gyroAnglePublisher.set(self._get_gyro_angle())
             self._target_publisher.set(self._lock_target)
 
     def toggle_lock_command(self, lock_target: Pose2d) -> Command:
@@ -168,7 +173,7 @@ class Drive(Subsystem):
         :param pose: The pose to which to set the odometry.
         """
         self._odometry.resetPosition(
-            self._get_gyro_angle(),
+            self._get_localization_angle(),
             (
                 self._frontLeft.getPosition(),
                 self._frontRight.getPosition(),
@@ -185,11 +190,7 @@ class Drive(Subsystem):
         """Returns a command that drives the robot with joystick input"""
         def run() -> ChassisSpeeds:
             input_vec = numpy.array([get_x(), get_y()])
-            if self._lockEnabled:
-                # Calculate the turning speed
-                omega = self._theta_controller.calculate(units.degreesToRadians(self._get_gyro_degrees())) * DriveConstants.kMaxAngularSpeed
-            else:
-                omega = get_omega() * DriveConstants.kMaxAngularSpeed
+            omega = get_omega() * DriveConstants.kMaxAngularSpeed
 
             if ENABLE_TELEMETRY:
                 self._omega_publisher.set(omega)
@@ -203,7 +204,7 @@ class Drive(Subsystem):
                     v[0],
                     v[1],
                     omega,
-                    self._get_gyro_angle()
+                    self._get_localization_angle()
                 )
             else:
                 output_speeds = ChassisSpeeds(
@@ -283,27 +284,25 @@ class Drive(Subsystem):
         self._rearRight.resetEncoders()
 
     def _get_gyro_degrees(self) -> float:
-        return -self._gyro.getAngle(IMUAxis.kZ)
+        # return -self._gyro.getAngle(IMUAxis.kZ)
+        return self._navX.getHeading()
 
     def _get_gyro_angle(self) -> Rotation2d:
         # Gyro is mounted upside-down, so we negate the angle
         return Rotation2d.fromDegrees(self._get_gyro_degrees())
+    
+    def _get_localization_angle(self) -> Rotation2d:
+        # return self._localization.get_pose2d().rotation()
+        return self._get_gyro_angle()
 
     def zeroHeading(self) -> None:
         """
         Zeroes the heading of the robot.
         """
         print('GYRO RESET')
+        reset_pose = Pose2d(Translation2d(), Rotation2d())
+        self._navX.resetRobotToField(reset_pose)
         self._gyro.reset()
-
-    def getHeading(self) -> float:
-        """
-        Returns the heading of the robot.
-        :return: The robot's heading in degrees, from -180 to 180
-        """
-        #heading = self._localization.get_pose2d().rotation().degrees()
-        #return heading
-        return self._get_gyro_angle().degrees()
 
     def getTurnRate(self) -> float:
         """

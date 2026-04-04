@@ -36,18 +36,21 @@ class Robot(commands2.TimedCommandRobot):
         # Instantiate our RobotContainer.  This will perform all our button bindings, and put our
         # autonomous chooser on the dashboard.
         self.container = RobotContainer()
+        logger.log("Robot initialized")
 
     def robotPeriodic(self):
         """Called periodically for all modes"""
 
     def disabledInit(self) -> None:
         """Called once each time the robot enters Disabled mode."""
+        logger.log("DISABLED")
 
     def disabledPeriodic(self) -> None:
         """Called periodically when disabled"""
 
     def autonomousInit(self) -> None:
         """Called once when beginning autonomous. Should schedule the selected autonomous command."""
+        logger.log("AUTONOMOUS STARTED")
         self.autonomousCommand = self.container.getAutonomousCommand()
 
         if self.autonomousCommand:
@@ -62,6 +65,7 @@ class Robot(commands2.TimedCommandRobot):
         # teleop starts running. If you want the autonomous to
         # continue until interrupted by another command, remove
         # this line or comment it out.
+        logger.log("TELEOP STARTED")
         if self.autonomousCommand:
             self.autonomousCommand.cancel()
 

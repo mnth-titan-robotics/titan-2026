@@ -2,12 +2,10 @@
 from typing import TYPE_CHECKING, Callable
 
 from commands2 import Command, cmd
-from commands2 import Command, cmd
 from wpimath.controller import HolonomicDriveController, PIDController, ProfiledPIDControllerRadians
 from wpimath.geometry import Pose2d, Rotation2d
 from wpimath.kinematics import ChassisSpeeds
 from wpimath.trajectory import Trajectory, TrapezoidProfileRadians
-from wpimath import units
 from wpimath import units
 
 import constants

@@ -8,7 +8,7 @@ from wpimath.kinematics import ChassisSpeeds
 from wpimath.trajectory import TrajectoryGenerator, TrajectoryConfig
 from wpimath.geometry import Pose2d, Rotation2d, Translation2d
 from commands.game import Game
-from pathplannerlib.auto import AutoBuilder, DriveFeedforwards, NamedCommands, PathPlannerAuto, FlippingUtil
+from pathplannerlib.auto import AutoBuilder, DriveFeedforwards, EventTrigger, NamedCommands, PathPlannerAuto, FlippingUtil
 from pathplannerlib.controller import PPHolonomicDriveController
 import constants
 
@@ -34,12 +34,12 @@ class Auto:
 
         self._selectedAuto = cmd.none()
         DriveConstants = constants.Subsystems.Drive
-        
-        NamedCommands.registerCommand('climbtower', cmd.none())
-        NamedCommands.registerCommand('startLauncher', self._game.feed_and_shoot())
-        NamedCommands.registerCommand('runLauncher', self._game.feed_and_shoot())
-        NamedCommands.registerCommand('lowerIntake', self._robot.intakeExtender.auto_extend())
-        NamedCommands.registerCommand('runIntake', self._robot.intake.intake())
+
+        EventTrigger('climbtower').onTrue(cmd.none())
+        EventTrigger('startLauncher').onTrue(self._game.feed_and_shoot())
+        EventTrigger('runLauncher').whileTrue(self._game.feed_and_shoot())
+        EventTrigger('lowerIntake').onTrue(self._robot.intakeExtender.auto_extend())
+        EventTrigger('runIntake').whileTrue(self._robot.intake.intake())
 
         def output(chassisSpeeds: ChassisSpeeds, driveFeedForward: DriveFeedforwards) -> None:
             self._robot.drive.set_chassis_speeds(chassisSpeeds)
@@ -62,14 +62,13 @@ class Auto:
         self.autoChooser = AutoBuilder.buildAutoChooser()
         SmartDashboard.putData("Robot/Auto", self.autoChooser)
         self.autoChooser.onChange(self._onAutoChange)
-        
+
     def _onAutoChange(self, selected_auto) -> None:
         if isinstance(selected_auto, PathPlannerAuto):
             starting_pose = selected_auto._startingPose
             if DriverStation.getAlliance() == DriverStation.Alliance.kRed:
                 starting_pose = FlippingUtil.flipFieldPose(starting_pose)
             self._robot.localization.reset_pose2d(starting_pose)
-
 
     def get(self):
         return self.autoChooser.getSelected()
@@ -82,7 +81,7 @@ class Auto:
         drive = self._robot.drive
         speeds = ChassisSpeeds(vx=-0.75)
         return cmd.sequence(
-            
+
             drive.drive_command(lambda: speeds).withTimeout(0.5),
             self.auto_launch(units.seconds(2.0))
         )
@@ -103,7 +102,7 @@ class Auto:
         return self._game.followTrajectoryCommand(
             trajectory=trajectory
         )
-    
+
     def _feed_when_at_speed(self) -> Command:
         return self._robot.indexer.stop() \
             .until(self._robot.launcher.at_speed) \
@@ -115,4 +114,3 @@ class Auto:
             self._robot.launcher.start(),
             self._feed_when_at_speed()
         ).withTimeout(duration)
-    

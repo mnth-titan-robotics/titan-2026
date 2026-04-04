@@ -12,7 +12,7 @@ from subsystems import Drive, Launcher, Intake, IntakeExtender, Indexer
 from commands.auto import Auto
 from commands.game import Game
 from services import Tracker, TrackerConstants, Localization
-from lib import utils
+from lib import utils, logger
 
 # Create an alias to simplify usage
 cmd = commands2.cmd
@@ -46,6 +46,8 @@ class RobotContainer:
         self._initControllers()
         self._initCommands()
         self._initControllerBindings()
+        logger.start()
+
 
     def _initServices(self):
         self.localization = Localization()
@@ -54,7 +56,7 @@ class RobotContainer:
     def _initSubsystems(self):
         """Initializes subsystems. Should only be called from __init__"""
         self.drive = Drive(self.localization, self.tracker)
-        self.launcher = Launcher()
+        self.launcher = Launcher(self.tracker)
         self.indexer = Indexer()
         self.intake = Intake()
         self.intakeExtender = IntakeExtender()
