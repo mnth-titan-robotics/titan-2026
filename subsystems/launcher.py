@@ -6,6 +6,7 @@ import constants
 from wpilib import RobotBase, RobotController
 from wpimath import units
 from services import Tracker
+from lib import utils
 
 ENABLE_TELEMETRY = constants.ENABLE_TELEMETRY
 
@@ -22,7 +23,11 @@ class Launcher(Subsystem):
     # 3.8 - corner - 5.2m
     # 3.3 - mid - ~4.5m
     # 2.8 - trench - ~3.5m
-    SPEED_LOOKUP_SLOPE = (3.8 - 2.8) / (5.2 - 3.5)
+    MIN_SPEED = 2.8
+    MAX_SPEED = 3.8
+    MIN_RANGE = 3.5
+    MAX_RANGE = 5.2
+    SPEED_LOOKUP_SLOPE = (MAX_SPEED - MIN_SPEED) / (MAX_RANGE - MIN_RANGE)
     SPEED_LOOKUP_INTERCEPT = 3.8 - SPEED_LOOKUP_SLOPE * 5.2
 
     def __init__(self, tracker: Tracker):
@@ -31,6 +36,7 @@ class Launcher(Subsystem):
         self._speed_entry = self.nt_instance.getFloatTopic(
             "Subsystems/Launcher/Launcher_Speed").getEntry(self.Constants.LaunchSpeed)
         self._speed_entry.setDefault(self.Constants.LaunchSpeed)
+        self._auto_speed = False
         if ENABLE_TELEMETRY:
             self._cur_speed = self.nt_instance.getFloatTopic("Subsystems/Launcher/Launcher_Velocity").publish()
             self._cur_amps = self.nt_instance.getFloatTopic("Subsystems/Launcher/Launcher_Amps").publish()
@@ -79,8 +85,12 @@ class Launcher(Subsystem):
 
     def periodic(self) -> None:
         """Updates the current speed of the launcher on the dashboard."""
-        dist = self._tracker.target_dist
-        self._speed_entry.set(self.SPEED_LOOKUP_SLOPE * dist + self.SPEED_LOOKUP_INTERCEPT)
+        if self._auto_speed:
+            dist = self._tracker.target_dist
+            speed = utils.clamp(self.SPEED_LOOKUP_SLOPE * dist + self.SPEED_LOOKUP_INTERCEPT,
+                                self.MIN_SPEED,
+                                self.MAX_SPEED)
+            self._speed_entry.set(speed)
         if ENABLE_TELEMETRY:
             self._cur_speed.set(self._encoder.getVelocity())
             self._at_speed.set(self.at_speed())
@@ -100,6 +110,11 @@ class Launcher(Subsystem):
             vbus,
             dt
         )
+
+    def toggle_auto_speed(self) -> Command:
+        def command_function():
+            self._auto_speed = not self._auto_speed
+        return self.runOnce(command_function).withName("toggle_auto_speed")
 
     def start(self) -> Command:
         """Starts the launcher at launch speed."""

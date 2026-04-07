@@ -138,7 +138,7 @@ class RobotContainer:
         #self._operatorController.povRight().whileTrue(self.intakeExtender.auto_extend())
         self._operatorController.a().whileTrue(self.game.pulseIndexerCommand())
         self._operatorController.b().whileTrue(self.indexer.reverse())
-        # self._operatorController.y().whileTrue(cmd.none())
+        self._operatorController.y().debounce(0.25).onTrue(self.launcher.toggle_auto_speed())
         # self._operatorController.x().whileTrue(cmd.none())
         #self._operatorController.start().whileTrue(self.game.feed_and_shoot())
         self._operatorController.back().whileTrue(self.game.operatorResetCommand())

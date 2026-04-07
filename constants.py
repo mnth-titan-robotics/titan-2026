@@ -140,9 +140,6 @@ class Subsystems:
         IdleSpeed = 0.2
         LeftMotorId = 20
         RightMotorId = 21
-        # Minimum speed in RPM required for the launcher to reliably fire projectiles
-        MinLaunchSpeed = 3.0
-        DistanceToSpeedLookup = { units.meters(2.75): 3.0, units.meters(5.5): 3.82 }
         LauncherPID = PID(0.7, 0.001, 0.6)
         # 1:1000 1k RPM
         # 1:1.5 gear reduction

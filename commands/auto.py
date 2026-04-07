@@ -2,6 +2,8 @@
 
 from commands2 import Command, cmd
 
+from wpilib import getDeployDirectory, reportError, reportWarning, SendableChooser, Timer
+import os
 from wpilib import DriverStation, SmartDashboard
 from wpimath import units
 from wpimath.kinematics import ChassisSpeeds
@@ -59,6 +61,35 @@ class Auto:
         # callback below
         self.autoChooser = AutoBuilder.buildAutoChooser()
         SmartDashboard.putData("Robot/Auto", self.autoChooser)
+
+    @staticmethod
+    def buildAutoChooser(default_auto_name: str = "") -> SendableChooser:
+        """
+        Create and populate a sendable chooser with all PathPlannerAutos in the project and the default auto name selected.
+        
+        :param default_auto_name: the name of the default auto to be selected in the chooser
+        :return: a sendable chooser object populated with all of PathPlannerAutos in the project
+        """
+        if not AutoBuilder.isConfigured():
+            raise RuntimeError('AutoBuilder was not configured before attempting to build an auto chooser')
+        auto_folder_path = os.path.join(getDeployDirectory(), 'pathplanner', 'autos')
+        auto_list = os.listdir(auto_folder_path)
+
+        chooser = SendableChooser()
+        default_auto_added = False
+
+        for auto in auto_list:
+            auto = auto.removesuffix(".auto")
+            if auto == default_auto_name:
+                default_auto_added = True
+                chooser.setDefaultOption(auto, AutoBuilder.buildAuto(auto))
+            else:
+                chooser.addOption(auto, AutoBuilder.buildAuto(auto))
+        if not default_auto_added:
+            chooser.setDefaultOption("None", cmd.none())
+        else:
+            chooser.addOption("None", cmd.none())
+        return chooser
         self.autoChooser.onChange(self._onAutoChange)
 
     def _onAutoChange(self, selected_auto) -> None:
