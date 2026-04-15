@@ -2,6 +2,7 @@ from wpimath import units
 import math
 
 from pathplannerlib.config import RobotConfig, PIDConstants
+from pathplannerlib.auto import FlippingUtil
 from wpimath import units
 from wpimath.geometry import Translation2d, Pose2d, Rotation2d
 from wpimath.kinematics import SwerveDrive4Kinematics, MecanumDriveKinematics
@@ -11,7 +12,8 @@ from lib.classes import MotorControllerType, DifferentialModuleConstants, Differ
 from lib.enums import ModuleLocation
 
 class FieldConstants:
-    kHubPose = Pose2d(Translation2d(4.5, 4.025), Rotation2d())
+    kBlueHubPose = Pose2d(Translation2d(4.5, 4.025), Rotation2d())
+    kRedHubPose = FlippingUtil.flipFieldPose(kBlueHubPose)
     kLeftPass = Pose2d(Translation2d(2.75, 6.25), Rotation2d())
     kRightPass = Pose2d(Translation2d(2.75, 1.5), Rotation2d())
 ENABLE_TELEMETRY = True
@@ -96,7 +98,7 @@ class Subsystems:
         kTurnLatency: float = 0.06 # Delay between a commanded turn and when we can expect to reach the setpoint
 
         TranslationPID = PID(P=1.5, I=0.0, D=0.1)
-        RotationPID = PID(P=1.0, I=0.0, D=0.1)
+        RotationPID = PID(P=3.0, I=0.0, D=0.1)
 
         # Chassis configuration
         # Distance between centers of right and left wheels on robot
@@ -138,9 +140,6 @@ class Subsystems:
         IdleSpeed = 0.2
         LeftMotorId = 20
         RightMotorId = 21
-        # Minimum speed in RPM required for the launcher to reliably fire projectiles
-        MinLaunchSpeed = 3.0
-        DistanceToSpeedLookup = { units.meters(2.75): 3.0, units.meters(5.5): 3.82 }
         LauncherPID = PID(0.7, 0.001, 0.6)
         # 1:1000 1k RPM
         # 1:1.5 gear reduction

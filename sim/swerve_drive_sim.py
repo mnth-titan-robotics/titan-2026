@@ -3,13 +3,12 @@ import random
 import wpimath
 from rev import SparkFlex, SparkFlexSim, SparkMax, SparkMaxSim
 from wpilib import RobotController
-from wpilib.simulation import DCMotorSim, FlywheelSim
 from wpimath import units
 from wpimath.controller import PIDController
 from wpimath.filter import SlewRateLimiter
 from wpimath.geometry import Pose2d, Rotation2d, Translation2d
 from wpimath.kinematics import ChassisSpeeds, SwerveModuleState
-from wpimath.system.plant import DCMotor, LinearSystemId
+from wpimath.system.plant import DCMotor
 from wpimath.system import plant
 from subsystems import Drive, DriveConstants, MAXSwerveModule
 from constants import ModuleConstants
@@ -53,7 +52,7 @@ def _createSim(motor_controller: SparkFlex | SparkMax, motor: plant.DCMotor) -> 
 class SwerveDriveSim:
     class SwerveModuleSim:
         def __init__(self, module: MAXSwerveModule):
-            self._driveSparkSim = SparkMaxSim(module._drivingSpark, DCMotor.NEO(1))
+            self._driveSparkSim = SparkFlexSim(module._drivingSpark, DCMotor.NEO(1))
             self._turnSparkSim = SparkMaxSim(module._turningSpark, DCMotor.NEO(1))
             self._angularOffset = module._chassisAngularOffset
 

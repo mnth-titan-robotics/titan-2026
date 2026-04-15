@@ -7,3 +7,6 @@
 
 ## Project Details
 Manor New Technology High School's 2026 "Rebuilt" robot codebase.
+
+# Attribution
+Thanks to [FRC 2881, The Lady Cans](https://github.com/frc2881) for their open-source code! We reuse a significant amount of code from their Robot-2026 and RobotLib projects.

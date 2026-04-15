@@ -3,25 +3,25 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.45681883024251,
-        "y": 4.0
+        "x": 3.583081967213115,
+        "y": 6.0
       },
       "prevControl": null,
       "nextControl": {
-        "x": 3.2147276020844444,
-        "y": 4.062384591438266
+        "x": 3.0039657631954344,
+        "y": 6.014983185613059
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 0.5714978601997143,
-        "y": 4.973052781740371
+        "x": 0.7267617689015686,
+        "y": 7.392582025677603
       },
       "prevControl": {
-        "x": 1.2831241084165474,
-        "y": 4.701340941512125
+        "x": 1.3079022122962498,
+        "y": 6.944609153200346
       },
       "nextControl": null,
       "isLocked": false,
@@ -33,11 +33,11 @@
   "pointTowardsZones": [
     {
       "fieldPosition": {
-        "x": 4.625,
+        "x": 4.5,
         "y": 4.025
       },
       "rotationOffset": 0.0,
-      "minWaypointRelativePos": 0.047958214624883616,
+      "minWaypointRelativePos": 0.2036945812807901,
       "maxWaypointRelativePos": 1.0,
       "name": "Point Towards Zone"
     }
@@ -47,23 +47,13 @@
       "name": "lowerIntake",
       "waypointRelativePos": 0,
       "endWaypointRelativePos": null,
-      "command": {
-        "type": "named",
-        "data": {
-          "name": "lowerIntake"
-        }
-      }
+      "command": null
     },
     {
       "name": "startLauncher",
       "waypointRelativePos": 1.0,
       "endWaypointRelativePos": null,
-      "command": {
-        "type": "named",
-        "data": {
-          "name": "startLauncher"
-        }
-      }
+      "command": null
     }
   ],
   "globalConstraints": {
@@ -76,7 +66,7 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": -11.103833436636094
+    "rotation": -43.83086067209262
   },
   "reversed": false,
   "folder": null,

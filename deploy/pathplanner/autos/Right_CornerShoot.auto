@@ -13,13 +13,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "AutoPath_1_SL"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "startLauncher"
+            "pathName": "Right_CornerShoot"
           }
         }
       ]

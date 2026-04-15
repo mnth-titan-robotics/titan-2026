@@ -13,13 +13,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "AutoPath_3_SR"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "startLauncher"
+            "pathName": "Mid_DepotShoot"
           }
         }
       ]

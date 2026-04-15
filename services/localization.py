@@ -67,8 +67,8 @@ class Localization:
             pose.translation().y,
             self._pose.z,
             Rotation3d(0, 0, pose.rotation().radians()))
+        self._pose = pose3d
         if RobotBase.isSimulation():
-            self._pose = pose3d
             self._posePublisher.set(self._pose)
         else:
             self._questnav.set_pose(pose3d + self._questnavToRobot.inverse())
