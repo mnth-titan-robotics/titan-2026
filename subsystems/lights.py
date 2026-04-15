@@ -17,7 +17,7 @@ class LEDSubsystem(Subsystem):
         # Class-wide Variables
         self.ACTIVE_LED = 0
 
-        self.LED_STRIP_LENGTH = 35
+        self.LED_STRIP_LENGTH = 64
         self.LED_OBJECT = AddressableLED(LED_PORT_0)
         self.LED_DATA_LIST = list(LEDData() for i in range(self.LED_STRIP_LENGTH))
 

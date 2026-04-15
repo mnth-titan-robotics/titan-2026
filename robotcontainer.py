@@ -8,7 +8,7 @@ import enum
 import commands2
 import constants
 from subsystems import Drive, Launcher, Intake, IntakeExtender, Indexer
-# from subsystems.lights import LEDSubsystem
+from subsystems.lights import LEDSubsystem
 from commands.auto import Auto
 from commands.game import Game
 from services import Tracker, TrackerConstants, Localization
@@ -58,7 +58,7 @@ class RobotContainer:
         self.indexer = Indexer()
         self.intake = Intake()
         self.intakeExtender = IntakeExtender()
-        #self.leds = LEDSubsystem()
+        self.leds = LEDSubsystem()
 
     def _initControllers(self):
         self._driverController = commands2.button.CommandXboxController(
@@ -137,7 +137,7 @@ class RobotContainer:
         self._operatorController.a().whileTrue(self.game.pulseIndexerCommand())
         self._operatorController.b().whileTrue(self.indexer.reverse())
         # self._operatorController.y().whileTrue(cmd.none())
-        # self._operatorController.x().whileTrue(cmd.none())
+        self._operatorController.x().whileTrue(self.game.reverse_intake_and_indexer())
         #self._operatorController.start().whileTrue(self.game.feed_and_shoot())
         self._operatorController.back().whileTrue(self.game.operatorResetCommand())
 

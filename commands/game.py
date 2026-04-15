@@ -145,5 +145,12 @@ class Game:
                 )
         ).withName('feed_and_shoot')
 
+    def reverse_intake_and_indexer(self):
+        """Runs both the intake and indexer in reverse to dump fuel or to unjam intake or indexer"""
+        return cmd.parallel(
+            self._robot.intake.reverse(),
+            self._robot.indexer.reverse()
+        ).withName("reverse_intake_and_indexer")
+
     def toggleLockOnHub(self) -> Command:
         return self._robot.drive.toggle_lock_command(constants.FieldConstants.kHubPose)
