@@ -11,6 +11,8 @@ from wpimath.trajectory import TrapezoidProfile
 from lib.classes import MotorControllerType, DifferentialModuleConstants, DifferentialModuleConfig, DriftCorrectionConstants, PID, Tolerance
 from lib.enums import ModuleLocation
 
+from phoenix6.canbus import CANBus
+
 class FieldConstants:
     kBlueHubPose = Pose2d(Translation2d(4.5, 4.025), Rotation2d())
     kRedHubPose = FlippingUtil.flipFieldPose(kBlueHubPose)
@@ -22,6 +24,14 @@ class Controllers:
     DriverPort = 0
     OperatorPort = 1
     kDriveDeadband: float = 0.1
+
+
+class Pigeon2:
+    # ID of the device, as configured in Phoenix Tuner
+    DeviceID=0,
+
+    # The CAN bus this device is on
+    CANBus=CANBus.roborio()
 
 
 class NeoMotorConstants:
