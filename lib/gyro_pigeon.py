@@ -15,8 +15,8 @@ class Gyro_Pigeon2():
         self._baseKey = f'Robot/Sensors/Pigeon2_Gyro'
 
         self._gyro = Pigeon2(
-            device_id=Constants.DeviceID,
-            canbus=Constants.CANBus
+            device_id=Constants.kDeviceID,
+            canbus=Constants.kCANBus
         )
 
         self._angleAdjustment: units.degrees = 0

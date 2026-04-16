@@ -28,10 +28,10 @@ class Controllers:
 
 class Pigeon2:
     # ID of the device, as configured in Phoenix Tuner
-    DeviceID=0,
+    kDeviceID=0
 
     # The CAN bus this device is on
-    CANBus=CANBus.roborio()
+    kCANBus=CANBus.roborio()
 
 
 class NeoMotorConstants:

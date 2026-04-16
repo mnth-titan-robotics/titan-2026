@@ -23,6 +23,7 @@ import numpy
 from lib.utils import apply_joystick_curves, clamp
 from lib.gyro_navx2 import Gyro_NAVX2
 from navx import AHRS
+from lib.gyro_pigeon import Gyro_Pigeon2
 IMUAxis = ADIS16470_IMU.IMUAxis
 DriveConstants = constants.Subsystems.Drive
 ENABLE_TELEMETRY = constants.ENABLE_TELEMETRY
@@ -61,6 +62,7 @@ class Drive(Subsystem):
         # The gyro sensor
         self._gyro = ADIS16470_IMU()
         self._navX = Gyro_NAVX2(AHRS.NavXComType.kUSB1)
+        self._pigeon2 = Gyro_Pigeon2()
         self._auto_aim_pid_controller = ProfiledPIDControllerRadians(
             Kp=DriveConstants.RotationPID.P,
             Ki=DriveConstants.RotationPID.I,
@@ -276,7 +278,7 @@ class Drive(Subsystem):
 
     def _get_gyro_degrees(self) -> float:
         # return -self._gyro.getAngle(IMUAxis.kZ)
-        return self._navX.getHeading()
+        return self._pigeon2.getHeading()
 
     def _get_gyro_angle(self) -> Rotation2d:
         # Gyro is mounted upside-down, so we negate the angle
@@ -292,7 +294,7 @@ class Drive(Subsystem):
         """
         print('GYRO RESET')
         reset_pose = Pose2d(Translation2d(), Rotation2d())
-        self._navX.resetRobotToField(reset_pose)
+        self._pigeon2.resetRobotToField(reset_pose)
         self._gyro.reset()
 
     def getTurnRate(self) -> float:
