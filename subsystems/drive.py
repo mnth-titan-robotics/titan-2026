@@ -141,7 +141,8 @@ class Drive(Subsystem):
         def run():
             self._lockEnabled = not self._lockEnabled
             if self._lockEnabled:
-                self._tracker.enable_tracking(lock_target)
+                # TODO: add some way to let driver/operator to reset targeted hub
+                #self._tracker.enable_tracking(lock_target)
                 self._auto_aim_pid_controller.reset(self._tracker.relative_heading)
                 self._auto_aim_pid_controller.setGoal(0.0)
         return cmd.runOnce(run)

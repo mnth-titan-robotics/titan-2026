@@ -119,7 +119,7 @@ class RobotContainer:
         # self._driverController.b().whileTrue(cmd.none())
         #   UNTESTED PLEASE DON'T TRY TS WITHOUT TESTING
         self._driverController.y().onTrue(self.drive.toggle_field_relative_command())
-        self._driverController.x().onTrue(self.game.toggleLockOnHub())
+        self._driverController.x().debounce(0.25).onTrue(self.game.toggleLockOnHub())
         #self._driverController.start().onTrue(self.drive.toggle_field_relative_command())
         self._driverController.back().and_(self._driverController.start()).onTrue(self.game.driverResetCommand())
 

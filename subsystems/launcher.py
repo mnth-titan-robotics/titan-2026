@@ -35,6 +35,12 @@ class Launcher(Subsystem):
         self.nt_instance = ntcore.NetworkTableInstance.getDefault()
         self._speed_entry = self.nt_instance.getFloatTopic(
             "Subsystems/Launcher/Launcher_Speed").getEntry(self.Constants.LaunchSpeed)
+        self._auto_speed_publisher = self.nt_instance.getBooleanTopic(
+            "Subsystems/Launcher/Auto_Speed_Enabled"
+        ).publish()
+        self._dist_publisher = self.nt_instance.getFloatTopic(
+            "Subsystems/Launcher/Estimated_Distance"
+        ).publish()
         self._speed_entry.setDefault(self.Constants.LaunchSpeed)
         self._auto_speed = False
         if ENABLE_TELEMETRY:
@@ -85,8 +91,9 @@ class Launcher(Subsystem):
 
     def periodic(self) -> None:
         """Updates the current speed of the launcher on the dashboard."""
+        self._auto_speed_publisher.set(self._auto_speed)
+        dist = self._tracker.target_dist
         if self._auto_speed:
-            dist = self._tracker.target_dist
             speed = utils.clamp(self.SPEED_LOOKUP_SLOPE * dist + self.SPEED_LOOKUP_INTERCEPT,
                                 self.MIN_SPEED,
                                 self.MAX_SPEED)
@@ -95,6 +102,7 @@ class Launcher(Subsystem):
             self._cur_speed.set(self._encoder.getVelocity())
             self._at_speed.set(self.at_speed())
             self._cur_amps.set(self._leftMotor.getOutputCurrent())
+            self._dist_publisher.set(dist)
 
     def simulationPeriodic(self) -> None:
         vbus = RobotController.getBatteryVoltage()

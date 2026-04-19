@@ -9,17 +9,11 @@
           "data": {
             "pathName": "Left_SweepShoot"
           }
-        },
-        {
-          "type": "wait",
-          "data": {
-            "waitTime": 10.0
-          }
         }
       ]
     }
   },
   "resetOdom": true,
   "folder": null,
-  "choreoAuto": false
+  "choreoAuto": true
 }
