@@ -8,7 +8,7 @@ import enum
 import commands2
 import constants
 from subsystems import Drive, Launcher, Intake, IntakeExtender, Indexer
-# from subsystems.lights import LEDSubsystem
+from subsystems.lights import LEDSubsystem
 from commands.auto import Auto
 from commands.game import Game
 from services import Tracker, TrackerConstants, Localization
@@ -60,7 +60,7 @@ class RobotContainer:
         self.indexer = Indexer()
         self.intake = Intake()
         self.intakeExtender = IntakeExtender()
-        #self.leds = LEDSubsystem()
+        self.leds = LEDSubsystem()
 
     def _initControllers(self):
         self._driverController = commands2.button.CommandXboxController(

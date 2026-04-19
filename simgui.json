@@ -25,7 +25,8 @@
     "types": {
       "/FMSInfo": "FMSInfo",
       "/SmartDashboard/Field": "Field2d",
-      "/SmartDashboard/Robot/Auto": "String Chooser"
+      "/SmartDashboard/Robot/Auto": "String Chooser",
+      "/SmartDashboard/Subsystems/Lights2/LEDPatterns": "String Chooser"
     },
     "windows": {
       "/SmartDashboard/Field": {
