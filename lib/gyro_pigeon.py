@@ -27,7 +27,7 @@ class Gyro_Pigeon2():
         self._updateTelemetry()
 
     def getHeading(self) -> units.degrees:
-        return -utils.wrapAngle(self._gyro.get_yaw().value + self._angleAdjustment)
+        return utils.wrapAngle(self._gyro.get_yaw().value + self._angleAdjustment)
     
     def getPitch(self) -> units.degrees:
         return self._gyro.get_pitch().value
