@@ -28,7 +28,7 @@ class Controllers:
 
 class Pigeon2:
     # ID of the device, as configured in Phoenix Tuner
-    kDeviceID=0
+    kDeviceID=1
 
     # The CAN bus this device is on
     kCANBus=CANBus.roborio()

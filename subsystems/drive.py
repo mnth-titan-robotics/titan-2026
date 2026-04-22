@@ -21,8 +21,6 @@ from services.localization import Localization
 from .max_swerve_module import MAXSwerveModule
 import numpy
 from lib.utils import apply_joystick_curves, clamp
-from lib.gyro_navx2 import Gyro_NAVX2
-from navx import AHRS
 from lib.gyro_pigeon import Gyro_Pigeon2
 IMUAxis = ADIS16470_IMU.IMUAxis
 DriveConstants = constants.Subsystems.Drive
@@ -60,8 +58,6 @@ class Drive(Subsystem):
         )
 
         # The gyro sensor
-        self._gyro = ADIS16470_IMU()
-        # self._navX = Gyro_NAVX2(AHRS.NavXComType.kUSB1)
         self._pigeon2 = Gyro_Pigeon2()
 
         self._auto_aim_pid_controller = ProfiledPIDControllerRadians(
@@ -279,8 +275,7 @@ class Drive(Subsystem):
         self._rearRight.resetEncoders()
 
     def _get_gyro_degrees(self) -> float:
-        # return -self._gyro.getAngle(IMUAxis.kZ)
-        return self._pigeon2.getHeading() #! Change ts back to navX
+        return self._pigeon2.getHeading()
 
     def _get_gyro_angle(self) -> Rotation2d:
         # Gyro is mounted upside-down, so we negate the angle
@@ -296,13 +291,11 @@ class Drive(Subsystem):
         """
         print('GYRO RESET')
         reset_pose = Pose2d(Translation2d(), Rotation2d())
-        self._pigeon2.resetRobotToField(reset_pose) #! Change ts back to navX
-        self._gyro.reset()
+        self._pigeon2.resetRobotToField(reset_pose)
 
     def getTurnRate(self) -> float:
         """
         Returns the turn rate of the robot.
         :return: The turn rate of the robot, in degrees per second
         """
-        multiplier = -1.0 if DriveConstants.kGyroReversed else 1.0
-        return self._gyro.getRate(IMUAxis.kZ) * multiplier
+        return self._pigeon2.getYawRate()

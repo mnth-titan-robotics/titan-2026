@@ -20,6 +20,7 @@ class Gyro_Pigeon2():
         )
 
         self._angleAdjustment: units.degrees = 0
+        self._angularVelocityYaw = self._gyro.get_angular_velocity_x_world()
 
         utils.addRobotPeriodic(self._periodic)
 
@@ -34,6 +35,9 @@ class Gyro_Pigeon2():
     
     def getRoll(self) -> units.degrees:
         return self._gyro.get_roll().value
+    
+    def getYawRate(self) -> units.degrees_per_second:
+        return self._angularVelocityYaw.value
     
     def _reset(self, heading: units.degrees = 0) -> None:
         self._angleAdjustment = -heading if heading != 0 else 0
