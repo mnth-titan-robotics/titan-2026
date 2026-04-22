@@ -59,7 +59,6 @@ class Drive(Subsystem):
 
         # The gyro sensor
         self._pigeon2 = Gyro_Pigeon2()
-
         self._auto_aim_pid_controller = ProfiledPIDControllerRadians(
             Kp=DriveConstants.RotationPID.P,
             Ki=DriveConstants.RotationPID.I,

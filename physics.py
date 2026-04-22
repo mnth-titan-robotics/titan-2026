@@ -24,7 +24,8 @@ from rev import SparkMaxSim
 import wpilib
 from pyfrc.physics.core import PhysicsInterface
 from wpilib import RobotController
-from wpilib.simulation import ADIS16470_IMUSim, DCMotorSim, FlywheelSim
+#from wpilib.simulation import ADIS16470_IMUSim, DCMotorSim, FlywheelSim
+from phoenix6.sim import Pigeon2SimState
 from wpimath.system.plant import DCMotor, LinearSystemId
 from wpimath import units
 from wpimath.geometry import Pose2d, Pose3d, Rotation3d
@@ -69,7 +70,7 @@ class PhysicsEngine:
         self._questNavSim = QuestNavSim(physics_controller, robot.container.localization)
         self._driveSim = SwerveDriveSim(robot.container.drive)
         # self._driveSim = MecanumSim(robot.container.drive)
-        self._gyroSim = ADIS16470_IMUSim(robot.container.drive._gyro)
+        self._gyroSim = Pigeon2SimState(robot.container.drive._pigeon2._gyro)
 
     def update_sim(self, now: float, tm_diff: float) -> None:
         self._questNavSim.simulationPeriodic(tm_diff)
@@ -81,6 +82,6 @@ class PhysicsEngine:
             # Update the gyro sim
             # ADIS is mounted upside-down, invert rotation
             rot = pose.rotation().degrees()
-            self._gyroSim.setGyroAngleZ(-rot)
+            self._gyroSim.set_raw_yaw(rot)
         else:
             pass
