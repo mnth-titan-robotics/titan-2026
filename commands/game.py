@@ -71,7 +71,7 @@ class Game:
         return cmd.parallel(
             self._robot.launcher.start(),
             cmd.none()
-            .until(self._robot.launcher.at_speed)
+            .until(self._robot.launcher.is_ready_to_shoot)
             .andThen(cmd.parallel(
                 self.feedFuelCommand(),
                 self._robot.intake.intake_half_speed()
@@ -89,3 +89,7 @@ class Game:
     def toggleLockOnHub(self) -> Command:
         return self._robot.drive.toggle_lock_command(
             utils.getValueForAlliance(constants.FieldConstants.kBlueHubPose, constants.FieldConstants.kRedHubPose))
+
+    def is_shooting(self) -> bool:
+        """Returns True if the launcher is running and the indexer is feeding fuel."""
+        return self._robot.launcher.is_ready_to_shoot() and self._robot.indexer.is_feeding()

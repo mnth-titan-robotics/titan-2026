@@ -88,7 +88,7 @@ class Auto:
 
     def _feed_when_at_speed(self) -> Command:
         return self._robot.indexer.stop() \
-            .until(self._robot.launcher.at_speed) \
+            .until(self._robot.launcher.is_ready_to_shoot) \
             .andThen(self._robot.indexer.feed())
 
     def auto_launch(self, duration: units.seconds) -> Command:

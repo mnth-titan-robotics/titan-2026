@@ -100,7 +100,7 @@ class Launcher(Subsystem):
             self._speed_entry.set(speed)
         if ENABLE_TELEMETRY:
             self._cur_speed.set(self._encoder.getVelocity())
-            self._at_speed.set(self.at_speed())
+            self._at_speed.set(self.is_ready_to_shoot())
             self._cur_amps.set(self._leftMotor.getOutputCurrent())
             self._dist_publisher.set(dist)
 
@@ -140,7 +140,7 @@ class Launcher(Subsystem):
 
         return self.run(command_function).withName("LauncherStop")
 
-    def at_speed(self) -> bool:
+    def is_ready_to_shoot(self) -> bool:
         """Returns True if the launcher is at launch speed."""
         v = self._encoder.getVelocity()
         return abs(v) >= self._speed_entry.get() * 0.9

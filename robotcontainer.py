@@ -7,12 +7,12 @@
 import enum
 import commands2
 import constants
-from subsystems import Drive, Launcher, Intake, IntakeExtender, Indexer
-from subsystems.lights import LEDSubsystem
+from subsystems import CANHealthMonitor, Drive, Launcher, Intake, IntakeExtender, Indexer, LEDSubsystem, LightPattern
 from commands.auto import Auto
 from commands.game import Game
 from services import Tracker, TrackerConstants, Localization
 from lib import utils, logger
+from wpilib import DriverStation, RobotBase
 
 # Create an alias to simplify usage
 cmd = commands2.cmd
@@ -48,6 +48,20 @@ class RobotContainer:
         self._initControllerBindings()
         logger.start()
 
+    def updateLights(self, robot: RobotBase):
+        """Update the lights based on the current robot state"""
+        if self.can_monitor.is_can_faulted:
+            self.lights.set_pattern(LightPattern.ERROR)
+        elif not DriverStation.isDSAttached():
+            self.lights.set_pattern(LightPattern.DS_DISCONNECTED)
+        elif robot.isDisabled():
+            self.lights.set_pattern(LightPattern.SHOWTIME)
+        elif self.game.is_shooting():
+            self.lights.set_pattern(LightPattern.SHOOTING)
+        elif self.launcher.is_ready_to_shoot():
+            self.lights.set_pattern(LightPattern.READY_TO_SHOOT)
+        else:
+            self.lights.set_pattern(LightPattern.IDLE)
 
     def _initServices(self):
         self.localization = Localization()
@@ -60,7 +74,8 @@ class RobotContainer:
         self.indexer = Indexer()
         self.intake = Intake()
         self.intakeExtender = IntakeExtender()
-        self.leds = LEDSubsystem()
+        self.lights = LEDSubsystem()
+        self.can_monitor = CANHealthMonitor()
 
     def _initControllers(self):
         self._driverController = commands2.button.CommandXboxController(

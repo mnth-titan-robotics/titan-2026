@@ -40,6 +40,7 @@ class Robot(commands2.TimedCommandRobot):
 
     def robotPeriodic(self):
         """Called periodically for all modes"""
+        self.container.updateLights(self)
 
     def disabledInit(self) -> None:
         """Called once each time the robot enters Disabled mode."""

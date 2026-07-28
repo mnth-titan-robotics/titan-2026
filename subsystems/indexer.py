@@ -7,6 +7,7 @@ from configs import Configs
 class Indexer(Subsystem):
     Constants = constants.Subsystems.Indexer
     def __init__(self):
+        self._feeding = False
         self.nt_instance = ntcore.NetworkTableInstance.getDefault()
         self._speed_entry = self.nt_instance.getFloatTopic("Subsystems/Indexer/Indexer_Speed").getEntry(self.Constants.IndexerSpeed)
         self._speed_entry.setDefault(self.Constants.IndexerSpeed)
@@ -21,6 +22,7 @@ class Indexer(Subsystem):
         def command_function():
             # Placeholder for retraction logic
             self._motor.set(0)
+            self._feeding = False
 
         return self.run(command_function).withName("IndexerStop")
     
@@ -29,6 +31,7 @@ class Indexer(Subsystem):
         def command_function():
             # Placeholder for retraction logic
             self._motor.set(self._speed_entry.get())
+            self._feeding = True
 
         return self.run(command_function).withName("IndexerFeed")
    
@@ -37,5 +40,10 @@ class Indexer(Subsystem):
         def command_function():
             # Placeholder for retraction logic
             self._motor.set(-self._speed_entry.get())
+            self._feeding = False
 
         return self.run(command_function).withName("IndexerReverse")
+    
+    def is_feeding(self) -> bool:
+        """Returns true if the indexer is running"""
+        return self._feeding
