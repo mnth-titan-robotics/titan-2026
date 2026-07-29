@@ -11,7 +11,7 @@ from target_heading_tests import *
 
 def test_deadzone_at_origin():
     """Test that inputs at origin return zero"""
-    result = apply_joystick_curves(numpy.array([0.0, 0.0]))
+    result = apply_joystick_curves(0.0, 0.0)
     numpy.testing.assert_array_equal(result, numpy.array([0.0, 0.0]))
 
 
@@ -27,7 +27,7 @@ def test_deadzone_within_threshold():
         numpy.array([-0.03, -0.03]),
     ]
     for input_vec in test_cases:
-        result = apply_joystick_curves(input_vec)
+        result = apply_joystick_curves(*input_vec)
         numpy.testing.assert_array_equal(result, numpy.array([0.0, 0.0]),
                                          err_msg=f"Input {input_vec} should be in deadzone")
 
@@ -35,13 +35,13 @@ def test_deadzone_within_threshold():
 def test_deadzone_boundary():
     """Test inputs at deadzone boundary (0.05)"""
     # Exactly at boundary should still be in deadzone
-    result = apply_joystick_curves(numpy.array([0.05, 0.0]))
+    result = apply_joystick_curves(0.05, 0.0)
     numpy.testing.assert_array_equal(result, numpy.array([0.0, 0.0]))
 
 
 def test_just_outside_deadzone():
     """Test that inputs just outside deadzone are not zeroed"""
-    result = apply_joystick_curves(numpy.array([0.06, 0.0]))
+    result = apply_joystick_curves(0.06, 0.0)
     # Should not be zero
     assert not numpy.array_equal(result, numpy.array([0.0, 0.0]))
 
@@ -50,7 +50,7 @@ def test_exponential_curve_applied():
     """Test that exponential curve (magnitude cubed) is applied correctly"""
     # Test simple horizontal input
     input_vec = numpy.array([0.5, 0.0])
-    result = apply_joystick_curves(input_vec)
+    result = apply_joystick_curves(*input_vec)
     expected_magnitude = 0.5 ** 3  # mag^2 * original magnitude = mag^3
     expected = numpy.array([expected_magnitude, 0.0])
     numpy.testing.assert_array_almost_equal(result, expected, decimal=6)
@@ -59,7 +59,7 @@ def test_exponential_curve_applied():
 def test_direction_maintained_positive_x():
     """Test that direction is maintained for positive x input"""
     input_vec = numpy.array([0.8, 0.0])
-    result = apply_joystick_curves(input_vec)
+    result = apply_joystick_curves(*input_vec)
     # Direction should be maintained (positive x)
     assert result[0] > 0
     assert abs(result[1]) < 1e-10
@@ -68,7 +68,7 @@ def test_direction_maintained_positive_x():
 def test_direction_maintained_negative_x():
     """Test that direction is maintained for negative x input"""
     input_vec = numpy.array([-0.8, 0.0])
-    result = apply_joystick_curves(input_vec)
+    result = apply_joystick_curves(*input_vec)
     # Direction should be maintained (negative x)
     assert result[0] < 0
     assert abs(result[1]) < 1e-10
@@ -77,7 +77,7 @@ def test_direction_maintained_negative_x():
 def test_direction_maintained_positive_y():
     """Test that direction is maintained for positive y input"""
     input_vec = numpy.array([0.0, 0.8])
-    result = apply_joystick_curves(input_vec)
+    result = apply_joystick_curves(*input_vec)
     # Direction should be maintained (positive y)
     assert abs(result[0]) < 1e-10
     assert result[1] > 0
@@ -86,7 +86,7 @@ def test_direction_maintained_positive_y():
 def test_direction_maintained_negative_y():
     """Test that direction is maintained for negative y input"""
     input_vec = numpy.array([0.0, -0.8])
-    result = apply_joystick_curves(input_vec)
+    result = apply_joystick_curves(*input_vec)
     # Direction should be maintained (negative y)
     assert abs(result[0]) < 1e-10
     assert result[1] < 0
@@ -96,7 +96,7 @@ def test_direction_maintained_diagonal():
     """Test that direction is maintained for diagonal input"""
     # 45-degree angle
     input_vec = numpy.array([0.7071, 0.7071])  # ~1/sqrt(2)
-    result = apply_joystick_curves(input_vec)
+    result = apply_joystick_curves(*input_vec)
 
     # Both components should be positive
     assert result[0] > 0
@@ -118,7 +118,7 @@ def test_direction_maintained_various_angles():
             magnitude * numpy.cos(angle_rad),
             magnitude * numpy.sin(angle_rad)
         ])
-        result = apply_joystick_curves(input_vec)
+        result = apply_joystick_curves(*input_vec)
 
         # Calculate angles
         input_angle = numpy.arctan2(input_vec[1], input_vec[0])
@@ -132,7 +132,7 @@ def test_direction_maintained_various_angles():
 def test_full_deflection():
     """Test maximum joystick deflection"""
     input_vec = numpy.array([1.0, 0.0])
-    result = apply_joystick_curves(input_vec)
+    result = apply_joystick_curves(*input_vec)
     # mag = 1.0, so mag^2 = 1.0, result should be [1.0, 0.0]
     numpy.testing.assert_array_almost_equal(result, numpy.array([1.0, 0.0]))
 
@@ -141,7 +141,7 @@ def test_reduced_sensitivity_at_low_inputs():
     """Test that curve provides reduced sensitivity at low inputs"""
     # At 0.5 magnitude, output should be 0.125 (0.5^3)
     input_vec = numpy.array([0.5, 0.0])
-    result = apply_joystick_curves(input_vec)
+    result = apply_joystick_curves(*input_vec)
     assert abs(numpy.linalg.norm(result) - 0.125) < 1e-6
 
     # Output magnitude should be less than input magnitude (for inputs < 1)
@@ -158,7 +158,7 @@ def test_output_magnitude_scaling():
             if mag < 0.05:  # Skip deadzone
                 continue
             input_vec = angle_vec * mag
-            result = apply_joystick_curves(input_vec)
+            result = apply_joystick_curves(*input_vec)
             expected_mag = mag ** 3
             actual_mag = numpy.linalg.norm(result)
             assert abs(actual_mag - expected_mag) < 1e-6, \

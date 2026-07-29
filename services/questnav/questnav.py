@@ -12,10 +12,15 @@ Usage:
 
 from .questnav_data import PoseFrame
 from typing import List, Optional
-import time
 
 import ntcore
+from wpilib import Timer
 from wpimath.geometry import Pose3d, Translation3d, Rotation3d, Quaternion
+
+# How long we tolerate silence from the headset before declaring it disconnected.
+# QuestNav publishes at ~120Hz, but NetworkTables flush cadence and Wi-Fi jitter mean
+# a couple of missed frames is normal - this needs to be several frame periods.
+kConnectionTimeout = 0.25  # seconds
 
 # Import generated protobuf classes
 from .generated import commands_pb2, geometry3d_pb2, data_pb2
@@ -88,7 +93,9 @@ class QuestNav:
         self._cached_response = commands_pb2.ProtobufQuestNavCommandResponse()
 
         # State
-        self._last_frame_timestamp = 0.0
+        # Negative so that is_connected() is False until the first frame actually arrives,
+        # rather than for the first 250ms after boot.
+        self._last_frame_timestamp = -1000.0
         self._battery_percent = 0
         self._tracking = False
         self._tracking_lost_counter = 0
@@ -216,19 +223,30 @@ class QuestNav:
             True if Quest is actively tracking, False if tracking is lost
             or no device data available
         """
-        return self._tracking
+        # A stale tracking flag from before a dropout is worthless, so a disconnected
+        # headset is never "tracking".
+        return self._tracking and self.is_connected()
 
     def is_connected(self) -> bool:
         """
         Determines if the Quest headset is currently connected.
-        
+
         Connection is determined by how recent the last frame data was received.
-        
+
         Returns:
             True if Quest is connected and sending data, False otherwise
         """
-        current_time = time.time()
-        return (current_time - self._last_frame_timestamp) < 0.1  # 100ms timeout
+        return (Timer.getFPGATimestamp() - self._last_frame_timestamp) < kConnectionTimeout
+
+    def is_reliable(self) -> bool:
+        """
+        True only when the headset is connected AND reporting good tracking.
+
+        This is the check that consumers should gate pose data on - a Quest that is
+        connected but has lost visual tracking will happily keep publishing frames that
+        have drifted away from reality.
+        """
+        return self.is_connected() and self._tracking
 
     def get_frame_count(self) -> Optional[int]:
         """
@@ -257,8 +275,7 @@ class QuestNav:
         Returns:
             Latency in milliseconds
         """
-        current_time = time.time()
-        return (current_time - self._last_frame_timestamp) * 1000.0
+        return (Timer.getFPGATimestamp() - self._last_frame_timestamp) * 1000.0
 
     def get_app_timestamp(self) -> Optional[float]:
         """
@@ -297,7 +314,9 @@ class QuestNav:
 
         # Process all new events
         events = self.data_listener.readQueue()
-        current_time = time.time()
+        # FPGA time, not wall time - it is monotonic and shares an epoch with the
+        # NetworkTables timestamps we stamp onto each PoseFrame.
+        current_time = Timer.getFPGATimestamp()
 
         for event in events:
             try:
@@ -321,12 +340,15 @@ class QuestNav:
 
                         self._frame_count = frame_data.frame_count
                         self._last_frame_timestamp = current_time
+                        # isTracking lives on the frame message, not on the nested pose -
+                        # reading it off pose3d threw, which is why this was commented out
+                        # and is_tracking() had been stuck at False since it was written.
+                        self._tracking = frame_data.isTracking
 
                         # Extract Pose3d
                         pose_proto = frame_data.pose3d
                         trans = pose_proto.translation
                         rot_quat = pose_proto.rotation.q
-                        # self._tracking = pose_proto.isTracking
 
                         translation = Translation3d(trans.x, trans.y, trans.z)
                         quaternion = Quaternion(rot_quat.w, rot_quat.x, rot_quat.y, rot_quat.z)

@@ -12,6 +12,7 @@ from commands.auto import Auto
 from commands.game import Game
 from services import Tracker, TrackerConstants, Localization
 from lib import utils, logger
+from lib.gyro_pigeon import Gyro_Pigeon2
 from wpilib import DriverStation, RobotBase
 
 # Create an alias to simplify usage
@@ -64,12 +65,16 @@ class RobotContainer:
             self.lights.set_pattern(LightPattern.IDLE)
 
     def _initServices(self):
-        self.localization = Localization()
+        # The gyro is created here rather than inside Drive so that Localization can share
+        # the same instance - it needs a heading source to fall back on when QuestNav drops,
+        # and a second Pigeon2 object would not see Drive's zeroHeading() offset.
+        self.gyro = Gyro_Pigeon2()
+        self.localization = Localization(self.gyro)
         self.tracker = Tracker(TrackerConstants(), self.localization.get_pose2d, self.localization.get_velocity)
 
     def _initSubsystems(self):
         """Initializes subsystems. Should only be called from __init__"""
-        self.drive = Drive(self.localization, self.tracker)
+        self.drive = Drive(self.localization, self.tracker, self.gyro)
         self.launcher = Launcher(self.tracker)
         self.indexer = Indexer()
         self.intake = Intake()

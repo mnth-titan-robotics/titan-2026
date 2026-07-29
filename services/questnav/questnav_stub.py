@@ -89,6 +89,10 @@ class QuestNavStub:
         """
         return self.connected
 
+    def is_reliable(self) -> bool:
+        """True only when connected AND tracking. Mirrors QuestNav.is_reliable()."""
+        return self.connected and self.tracking
+
     def get_frame_count(self) -> Optional[int]:
         """
         Gets the current frame count from the Quest headset.

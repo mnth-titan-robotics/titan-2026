@@ -19,7 +19,6 @@ import constants
 from services import Tracker
 from services.localization import Localization
 from .max_swerve_module import MAXSwerveModule
-import numpy
 from lib.utils import apply_joystick_curves, clamp
 from lib.gyro_pigeon import Gyro_Pigeon2
 IMUAxis = ADIS16470_IMU.IMUAxis
@@ -32,7 +31,7 @@ class Drive(Subsystem):
     _lockEnabled = False
     _lock_target = Pose2d()
 
-    def __init__(self, localization: Localization, tracker: Tracker):
+    def __init__(self, localization: Localization, tracker: Tracker, gyro: Gyro_Pigeon2 | None = None):
         self._localization = localization
         self._tracker = tracker
         # Create MAXSwerveModules
@@ -57,15 +56,18 @@ class Drive(Subsystem):
             DriveConstants.kRearRightChassisAngularOffset
         )
 
-        # The gyro sensor
-        self._pigeon2 = Gyro_Pigeon2()
+        # The gyro sensor. Shared with Localization when supplied - see
+        # RobotContainer._initServices.
+        self._pigeon2 = gyro if gyro is not None else Gyro_Pigeon2()
         self._auto_aim_pid_controller = ProfiledPIDControllerRadians(
             Kp=DriveConstants.RotationPID.P,
             Ki=DriveConstants.RotationPID.I,
             Kd=DriveConstants.RotationPID.D,
             constraints=TrapezoidProfileRadians.Constraints(
-                maxVelocity=DriveConstants.kMaxSpeedMetersPerSecond,
-                maxAcceleration=DriveConstants.kMaxAcceleration
+                # ANGULAR constraints - this is a ProfiledPIDControllerRadians, so these
+                # are rad/s and rad/s^2, not the linear drivetrain limits.
+                maxVelocity=DriveConstants.kMaxAngularSpeed,
+                maxAcceleration=DriveConstants.kMaxAngularAcceleration
             )
         )
         self._auto_aim_pid_controller.setTolerance(math.pi / 45.0)  # 2 degrees
@@ -85,6 +87,7 @@ class Drive(Subsystem):
             self._gyroAnglePublisher = networkTable.getStructTopic(f"{topic_key}/GyroAngle", Rotation2d).publish()
             self._target_publisher = networkTable.getStructTopic(f"{topic_key}/Target", Pose2d).publish()
             self._turn_rate_publisher = networkTable.getFloatTopic(f"{topic_key}/TurnRate").publish()
+            self._lock_enabled_publisher = networkTable.getBooleanTopic(f"{topic_key}/LockEnabled").publish()
 
         # Odometry class for tracking robot pose
         self._odometry = SwerveDrive4Odometry(
@@ -133,14 +136,30 @@ class Drive(Subsystem):
             self._gyroAnglePublisher.set(self._get_gyro_angle())
             self._target_publisher.set(self._lock_target)
 
+    def _start_lock(self) -> None:
+        """Seeds the auto-aim controller for a fresh lock."""
+        # Seed the motion profile at the CURRENT measurement, in radians.
+        # Tracker.relative_heading is in degrees; feeding it raw to a
+        # ProfiledPIDControllerRadians puts the profile's starting setpoint tens of
+        # radians away from where the robot actually is, so the first thing the
+        # profile does is drive the robot toward that bogus setpoint (away from the
+        # target) before slowly walking the setpoint back in to the goal.
+        self._auto_aim_pid_controller.reset(
+            units.degreesToRadians(self._tracker.relative_heading))
+        self._auto_aim_pid_controller.setGoal(0.0)
+
     def toggle_lock_command(self, lock_target: Pose2d) -> Command:
         def run():
+            # Auto-aim needs a trustworthy position to compute the bearing to the target.
+            # With QuestNav down we only have heading, so refuse to engage.
+            if not self._lockEnabled and not self._localization.is_pose_reliable():
+                self._lockEnabled = False
+                return
             self._lockEnabled = not self._lockEnabled
             if self._lockEnabled:
                 # TODO: add some way to let driver/operator to reset targeted hub
                 #self._tracker.enable_tracking(lock_target)
-                self._auto_aim_pid_controller.reset(self._tracker.relative_heading)
-                self._auto_aim_pid_controller.setGoal(0.0)
+                self._start_lock()
         return cmd.runOnce(run)
 
     def get_pose(self) -> Pose2d:
@@ -172,8 +191,14 @@ class Drive(Subsystem):
             get_omega: Callable[[], float]) -> Command:
         """Returns a command that drives the robot with joystick input"""
         def run() -> ChassisSpeeds:
-            input_vec = numpy.array([get_x(), get_y()])
             turn_rate = get_omega() * DriveConstants.kMaxAngularSpeed
+
+            # Drop the lock if localization degrades mid-lock - the bearing to the target is
+            # computed from the robot's position, which is frozen once QuestNav drops out,
+            # so the aim would silently walk off target. Hand rotation back to the driver.
+            if self._lockEnabled and not self._localization.is_pose_reliable():
+                self._lockEnabled = False
+
             if self._lockEnabled:
                 # The profiled PID controller setpoint is 0 - this means positive relative angles give a negative result.
                 # To compensate for this, negate the output of the PID controller.
@@ -184,22 +209,24 @@ class Drive(Subsystem):
 
             if ENABLE_TELEMETRY:
                 self._turn_rate_publisher.set(turn_rate)
+                self._lock_enabled_publisher.set(self._lockEnabled)
 
             # Apply joystick curves (deadzone and exponential)
-            curved_input = apply_joystick_curves(input_vec)
-            v = curved_input * DriveConstants.kMaxSpeedMetersPerSecond
+            vx, vy = apply_joystick_curves(get_x(), get_y())
+            vx *= DriveConstants.kMaxSpeedMetersPerSecond
+            vy *= DriveConstants.kMaxSpeedMetersPerSecond
             if self._fieldRelative:
                 # Convert the input speeds from field-relative to robot-relative using the gyro angle
                 output_speeds = ChassisSpeeds.fromFieldRelativeSpeeds(
-                    v[0],
-                    v[1],
+                    vx,
+                    vy,
                     turn_rate,
                     self._get_localization_angle()
                 )
             else:
                 output_speeds = ChassisSpeeds(
-                    v[0],
-                    v[1],
+                    vx,
+                    vy,
                     turn_rate
                 )
             return output_speeds

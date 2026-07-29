@@ -105,10 +105,11 @@ class Subsystems:
         kMaxSpeedMetersPerSecond: float = 12
         kMaxAngularSpeed: float = 2.0 * math.pi
         kMaxAcceleration: float = 1.0  # meters per second squared
+        kMaxAngularAcceleration: float = 4.0 * math.pi  # radians per second squared
         kTurnLatency: float = 0.06 # Delay between a commanded turn and when we can expect to reach the setpoint
 
         TranslationPID = PID(P=1.5, I=0.0, D=0.1)
-        RotationPID = PID(P=3.0, I=0.0, D=0.1)
+        RotationPID = PID(P=5.0, I=0.0, D=0.2)
 
         # Chassis configuration
         # Distance between centers of right and left wheels on robot
