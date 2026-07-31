@@ -108,6 +108,10 @@ class Subsystems:
         kMaxAngularAcceleration: float = 4.0 * math.pi  # radians per second squared
         kTurnLatency: float = 0.06 # Delay between a commanded turn and when we can expect to reach the setpoint
 
+        # Auto-lock is suppressed (without discarding the driver's requested lock state) once
+        # the robot's field-relative X position reaches or exceeds this distance.
+        kAutoLockDisableX: units.meters = 5.0
+
         TranslationPID = PID(P=1.5, I=0.0, D=0.1)
         RotationPID = PID(P=5.0, I=0.0, D=0.2)
 

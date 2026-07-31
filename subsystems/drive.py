@@ -167,7 +167,7 @@ class Drive(Subsystem):
         Returns the currently-estimated pose of the robot.
         :return: The pose.
         """
-        return self._odometry.getPose()
+        return self._localization.get_pose2d()
 
     def reset_odometry(self, pose: Pose2d) -> None:
         """
@@ -199,7 +199,12 @@ class Drive(Subsystem):
             if self._lockEnabled and not self._localization.is_pose_reliable():
                 self._lockEnabled = False
 
-            if self._lockEnabled:
+            # Past this X, the target is out of effective range - override the lock off
+            # without touching _lockEnabled, so it silently resumes once X drops back below
+            # the threshold instead of requiring the driver to re-toggle it.
+            lock_active = self._lockEnabled and self.get_pose().X() < DriveConstants.kAutoLockDisableX
+
+            if lock_active:
                 # The profiled PID controller setpoint is 0 - this means positive relative angles give a negative result.
                 # To compensate for this, negate the output of the PID controller.
                 turn_rate = clamp(
