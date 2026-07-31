@@ -42,7 +42,7 @@ class Launcher(Subsystem):
             "Subsystems/Launcher/Estimated_Distance"
         ).publish()
         self._speed_entry.setDefault(self.Constants.LaunchSpeed)
-        self._auto_speed = False
+        self._auto_speed = True
         if ENABLE_TELEMETRY:
             self._cur_speed = self.nt_instance.getFloatTopic("Subsystems/Launcher/Launcher_Velocity").publish()
             self._cur_amps = self.nt_instance.getFloatTopic("Subsystems/Launcher/Launcher_Amps").publish()

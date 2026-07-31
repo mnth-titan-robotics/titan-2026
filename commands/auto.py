@@ -14,6 +14,7 @@ import constants
 
 if TYPE_CHECKING:
     from robotcontainer import RobotContainer
+    from wpimath.geometry import Pose2d
 
 
 def shouldFlipPath():
@@ -46,7 +47,7 @@ class Auto:
 
         AutoBuilder.configure(
             self._robot.localization.get_pose2d,
-            self._robot.localization.reset_pose2d,
+            self._reset_pose2d,
             self._robot.drive.get_chassis_speeds,
             output,
             PPHolonomicDriveController(DriveConstants.kPathPlannerTranslationConstants,
@@ -62,13 +63,17 @@ class Auto:
         self.autoChooser = AutoBuilder.buildAutoChooser()
         self.autoChooser.onChange(self._onAutoChange)
         SmartDashboard.putData("Robot/Auto", self.autoChooser)
+    
+    def _reset_pose2d(self, pose: "Pose2d") -> None:
+        self._robot.localization.reset_pose2d(pose)
+        self._robot.gyro.resetRobotToField(pose)
 
     def _onAutoChange(self, selected_auto) -> None:
         if isinstance(selected_auto, PathPlannerAuto):
             starting_pose = selected_auto._startingPose
             if DriverStation.getAlliance() == DriverStation.Alliance.kRed:
                 starting_pose = FlippingUtil.flipFieldPose(starting_pose)
-            self._robot.localization.reset_pose2d(starting_pose)
+            self._reset_pose2d(starting_pose)
 
     def get(self):
         return self.autoChooser.getSelected()
