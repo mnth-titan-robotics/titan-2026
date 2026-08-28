@@ -16,10 +16,11 @@ from wpimath.kinematics import ChassisSpeeds, SwerveModuleState, SwerveDrive4Odo
 from wpimath.trajectory import Trajectory, TrapezoidProfileRadians
 import math
 import constants
+from pathplannerlib.auto import FlippingUtil
 from services import Tracker
 from services.localization import Localization
 from .max_swerve_module import MAXSwerveModule
-from lib.utils import apply_joystick_curves, clamp
+from lib.utils import apply_joystick_curves, clamp, getValueForAlliance
 from lib.gyro_pigeon import Gyro_Pigeon2
 IMUAxis = ADIS16470_IMU.IMUAxis
 DriveConstants = constants.Subsystems.Drive
@@ -202,7 +203,9 @@ class Drive(Subsystem):
             # Past this X, the target is out of effective range - override the lock off
             # without touching _lockEnabled, so it silently resumes once X drops back below
             # the threshold instead of requiring the driver to re-toggle it.
-            lock_active = self._lockEnabled and self.get_pose().X() < DriveConstants.kAutoLockDisableX
+            x = self.get_pose().X()
+            rel_x = getValueForAlliance(x, FlippingUtil.fieldSizeX - x)
+            lock_active = rel_x < DriveConstants.kAutoLockDisableX and self._lockEnabled
 
             if lock_active:
                 # The profiled PID controller setpoint is 0 - this means positive relative angles give a negative result.

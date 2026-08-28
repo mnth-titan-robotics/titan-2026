@@ -23,15 +23,16 @@ class Launcher(Subsystem):
     # 3.8 - corner - 5.2m
     # 3.3 - mid - ~4.5m
     # 2.8 - trench - ~3.5m
-    MIN_SPEED = 2.8
-    MAX_SPEED = 3.8
-    MIN_RANGE = 3.5
+    MIN_SPEED = 2.9
+    MAX_SPEED = 4.0
+    MIN_RANGE = 2.0
     MAX_RANGE = 5.2
     SPEED_LOOKUP_SLOPE = (MAX_SPEED - MIN_SPEED) / (MAX_RANGE - MIN_RANGE)
-    SPEED_LOOKUP_INTERCEPT = 3.8 - SPEED_LOOKUP_SLOPE * 5.2
+    SPEED_LOOKUP_INTERCEPT = MAX_SPEED - SPEED_LOOKUP_SLOPE * MAX_RANGE
 
     def __init__(self, tracker: Tracker):
         self._tracker = tracker
+        self._speed_bias = 0.0
         self.nt_instance = ntcore.NetworkTableInstance.getDefault()
         self._speed_entry = self.nt_instance.getFloatTopic(
             "Subsystems/Launcher/Launcher_Speed").getEntry(self.Constants.LaunchSpeed)
@@ -40,6 +41,9 @@ class Launcher(Subsystem):
         ).publish()
         self._dist_publisher = self.nt_instance.getFloatTopic(
             "Subsystems/Launcher/Estimated_Distance"
+        ).publish()
+        self._bias_publisher = self.nt_instance.getFloatTopic(
+            "Subsystems/Launcher/Speed_Bias"
         ).publish()
         self._speed_entry.setDefault(self.Constants.LaunchSpeed)
         self._auto_speed = True
@@ -93,6 +97,7 @@ class Launcher(Subsystem):
         """Updates the current speed of the launcher on the dashboard."""
         self._auto_speed_publisher.set(self._auto_speed)
         dist = self._tracker.target_dist
+        self._bias_publisher.set(self._speed_bias)
         if self._auto_speed:
             speed = utils.clamp(self.SPEED_LOOKUP_SLOPE * dist + self.SPEED_LOOKUP_INTERCEPT,
                                 self.MIN_SPEED,
@@ -124,11 +129,20 @@ class Launcher(Subsystem):
             self._auto_speed = not self._auto_speed
         return self.runOnce(command_function).withName("toggle_auto_speed")
 
+    def increase_bias(self) -> Command:
+        def command_function():
+            self._speed_bias = min(1.0, self._speed_bias + 0.1)
+        return self.runOnce(command_function).withName("increase_biase")
+
+    def decrease_bias(self) -> Command:
+        def command_function():
+            self._speed_bias = max(-1.0, self._speed_bias - 0.1)
+        return self.runOnce(command_function).withName("decrease_bias")
+    
     def start(self) -> Command:
         """Starts the launcher at launch speed."""
-
         def command_function():
-            self._controller.setSetpoint(self._speed_entry.get(), rev.SparkLowLevel.ControlType.kVelocity)
+            self._controller.setSetpoint(self._speed_entry.get() + self._speed_bias, rev.SparkLowLevel.ControlType.kVelocity)
 
         return self.run(command_function).withName("LauncherStart")
 

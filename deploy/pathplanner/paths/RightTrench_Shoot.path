@@ -3,13 +3,13 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 4.956090163934427,
-        "y": 0.5398269883638601
+        "x": 4.06,
+        "y": 0.473
       },
       "prevControl": null,
       "nextControl": {
-        "x": 4.690804622801193,
-        "y": 0.5398269883638602
+        "x": 3.8307064884369972,
+        "y": 0.5726217122674941
       },
       "isLocked": false,
       "linkedName": null
@@ -21,11 +21,11 @@
       },
       "prevControl": {
         "x": 3.8996341854550582,
-        "y": 0.4088480552059074
+        "y": 0.4088480552059073
       },
       "nextControl": {
         "x": 3.4737491349129925,
-        "y": 0.6708059215218128
+        "y": 0.670805921521813
       },
       "isLocked": false,
       "linkedName": null
@@ -55,8 +55,14 @@
       "command": null
     },
     {
+      "name": "runIntake",
+      "waypointRelativePos": 1.498830409356718,
+      "endWaypointRelativePos": 2.0,
+      "command": null
+    },
+    {
       "name": "startLauncher",
-      "waypointRelativePos": 0.8,
+      "waypointRelativePos": 2.0,
       "endWaypointRelativePos": null,
       "command": null
     }

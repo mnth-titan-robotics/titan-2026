@@ -16,13 +16,7 @@ class IntakeExtender(Subsystem):
     def __init__(self):
         self.nt_instance = ntcore.NetworkTableInstance.getDefault()
         topicKey = "Subsystems/Intake"
-        self._reverse_limit_entry = self.nt_instance.getFloatTopic(
-            f"{topicKey}/Extender_ReverseLimit").getEntry(self.Constants.ReverseLimit)
-        self._forward_limit_entry = self.nt_instance.getFloatTopic(
-            f"{topicKey}/Extender_ForwardLimit").getEntry(self.Constants.ForwardLimit)
         self._pos_publisher = self.nt_instance.getFloatTopic(f"{topicKey}/Extender_Pos").publish()
-        self._reverse_limit_entry.setDefault(self.Constants.ReverseLimit)
-        self._forward_limit_entry.setDefault(self.Constants.ForwardLimit)
 
         self._leftMotor = rev.SparkMax(self.Constants.LeftMotorId, rev.SparkBase.MotorType.kBrushless)
         self._rightMotor = rev.SparkMax(self.Constants.RightMotorId, rev.SparkBase.MotorType.kBrushless)
@@ -43,10 +37,6 @@ class IntakeExtender(Subsystem):
         
         self.encoder = self._leftMotor.getEncoder()
         self.encoder.setPosition(0)
-        if ENABLE_TELEMETRY:
-            self._cur_speed = self.nt_instance.getFloatTopic("Subsystems/Launcher/Launcher_Velocity").publish()
-            self._cur_amps = self.nt_instance.getFloatTopic("Subsystems/Launcher/Launcher_Amps").publish()
-            self._at_speed = self.nt_instance.getBooleanTopic("Subsystems/Launcher/At_Speed").publish()
 
         if not RobotBase.isReal():
             from wpilib.simulation import SingleJointedArmSim
@@ -74,9 +64,6 @@ class IntakeExtender(Subsystem):
     def periodic(self) -> None:
         """Updates the current state of the intake."""
         self._pos_publisher.set(self.encoder.getPosition())
-        if ENABLE_TELEMETRY:
-            self._cur_speed.set(self.encoder.getVelocity())
-            self._cur_amps.set(self._leftMotor.getOutputCurrent())
 
     def simulationPeriodic(self) -> None:
         vbus = RobotController.getBatteryVoltage()

@@ -51,7 +51,13 @@
     },
     {
       "name": "startLauncher",
-      "waypointRelativePos": 1.0,
+      "waypointRelativePos": 0,
+      "endWaypointRelativePos": null,
+      "command": null
+    },
+    {
+      "name": "runIntake",
+      "waypointRelativePos": 0.9108187134502955,
       "endWaypointRelativePos": null,
       "command": null
     }

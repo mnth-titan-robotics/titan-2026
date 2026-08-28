@@ -50,6 +50,12 @@
       "command": null
     },
     {
+      "name": "runIntake",
+      "waypointRelativePos": 0.7973684210526398,
+      "endWaypointRelativePos": 1.0,
+      "command": null
+    },
+    {
       "name": "startLauncher",
       "waypointRelativePos": 1.0,
       "endWaypointRelativePos": null,
@@ -66,7 +72,7 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 40.72323280517303
+    "rotation": 40.50451356698412
   },
   "reversed": false,
   "folder": null,
